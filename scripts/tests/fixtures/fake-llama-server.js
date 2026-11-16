@@ -26,9 +26,11 @@ const server = http.createServer((req, res) => {
   }
   if (req.url === '/v1/chat/completions' && req.method === 'POST') {
     if (req.headers.authorization !== 'Bearer ' + key) { res.writeHead(401); return res.end('{"error":"bad key"}'); }
-    let raw = '';
-    req.on('data', c => { raw += c; });
+    const chunks = [];
+    req.on('data', c => { chunks.push(c); });
     req.on('end', () => {
+      // join the raw bytes first: a letter like "ş" has two bytes and a chunk can end between them
+      const raw = Buffer.concat(chunks).toString('utf8');
       const m = /SCENARIO:([a-z-]+)/.exec(raw); const s = m ? m[1] : 'default';
       switch (s) {
         case 'hang': return; // never answers
