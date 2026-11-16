@@ -1,0 +1,8 @@
+{
+	"appId": "app.studydesk.planner",
+	"appName": "Study Desk",
+	"webDir": "../app",
+	"android": {
+		"allowMixedContent": false
+	}
+}
