@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "_note": "sizeBytes of models is exact when the Git LFS pointer was read, otherwise approximate (disk-space check and display only; the SHA-256 is the integrity check). enabled:false means the checksum is not confirmed twice yet; run the 'Verify AI catalog' workflow, then enable.",
+  "engine": {
+    "tag": "b12360",
+    "assets": {
+      "win-x64-cpu": {
+        "file": "llama-b12360-bin-win-cpu-x64.zip",
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12360/llama-b12360-bin-win-cpu-x64.zip",
+        "sha256": "eae1726047e0eaa707b1302929d196c999b96c2f243b21aea6e93bcebacc4e17",
+        "sizeBytes": 25097627,
+        "format": "zip",
+        "serverPath": "llama-server.exe"
+      },
+      "win-x64-vulkan": {
+        "file": "llama-b12360-bin-win-vulkan-x64.zip",
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12360/llama-b12360-bin-win-vulkan-x64.zip",
+        "sha256": "42a6f9df608b99c1c83fcaf77284a516e3f167b32a4690f4e4e364c377547055",
+        "sizeBytes": 38090978,
+        "format": "zip",
+        "serverPath": "llama-server.exe"
+      },
+      "mac-arm64": {
+        "file": "llama-b12360-bin-macos-arm64.tar.gz",
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12360/llama-b12360-bin-macos-arm64.tar.gz",
+        "sha256": "e815561e9621c606388d4538101d56fcf317cdec6ce8f2bbd1bf14f0df29925e",
+        "sizeBytes": 16908185,
+        "format": "tar.gz",
+        "serverPath": "llama-b12360/llama-server"
+      },
+      "mac-x64": {
+        "file": "llama-b12360-bin-macos-x64.tar.gz",
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12360/llama-b12360-bin-macos-x64.tar.gz",
+        "sha256": "ed329ff7f4048dbfbc401909926a6c6f49114fc7cb7860ed9c7976fadcc11a34",
+        "sizeBytes": 12661476,
+        "format": "tar.gz",
+        "serverPath": "llama-b12360/llama-server"
+      }
+    }
+  },
+  "models": [
+    {
+      "id": "nemotron-3-nano-4b",
+      "name": "NVIDIA Nemotron 3 Nano 4B",
+      "family": "nemotron",
+      "params": "4B",
+      "file": "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF/resolve/18d83da545bdfde657afff71123d7ffc8965edfa/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
+      "sha256": "be5d9a656a51922f24f1f09a759cebb694e1f5d9728bf0ef9f8c972c5a0b5ef2",
+      "sizeBytes": 2837072864,
+      "minRamBytes": 4000000000,
+      "recRamBytes": 8000000000,
+      "kvBytesPerToken": 32768,
+      "license": {
+        "name": "NVIDIA Nemotron Open Model License",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF"
+      },
+      "tier": 2,
+      "line": "Fast and small. Best in English; other languages are weak.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": []
+      },
+      "enabled": true
+    },
+    {
+      "id": "nemotron-nano-9b-v2",
+      "name": "NVIDIA Nemotron Nano 9B v2",
+      "family": "nemotron",
+      "params": "9B",
+      "file": "nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/nvidia_NVIDIA-Nemotron-Nano-9B-v2-GGUF/resolve/a1dd2f935b67588e0e68c2fe29c1e8737499da92/nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf",
+      "sha256": "be84528231457f766a35612386e2638d9af10beb10a9d8d23f0cc73c20818da7",
+      "sizeBytes": 6525629280,
+      "minRamBytes": 10000000000,
+      "recRamBytes": 16000000000,
+      "kvBytesPerToken": 65536,
+      "license": {
+        "name": "NVIDIA Open Model License",
+        "url": "https://huggingface.co/bartowski/nvidia_NVIDIA-Nemotron-Nano-9B-v2-GGUF"
+      },
+      "tier": 3,
+      "line": "Clearer explanations. Best in English; some European languages are fair.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": [
+          "German",
+          "Spanish",
+          "French",
+          "Italian"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "id": "qwen3-4b",
+      "name": "Qwen3 4B",
+      "family": "qwen",
+      "params": "4B",
+      "file": "Qwen_Qwen3-4B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/a8512ea1cb744e4e9537847a993f49229b77d1ce/Qwen_Qwen3-4B-Q4_K_M.gguf",
+      "sha256": "fbe1d5edd4ce802ae3ae7c7e4ab7d09789d697fdac1fc7929f8df4ca3c41bae3",
+      "sizeBytes": 2500000000,
+      "minRamBytes": 5000000000,
+      "recRamBytes": 8000000000,
+      "kvBytesPerToken": 147456,
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen3-4B"
+      },
+      "tier": 2,
+      "line": "Small and strong in many languages, including Turkish.",
+      "languages": {
+        "strong": [
+          "English",
+          "Turkish",
+          "Spanish",
+          "French",
+          "German",
+          "Portuguese",
+          "Italian",
+          "Russian",
+          "Arabic"
+        ],
+        "fair": []
+      },
+      "enabled": false
+    },
+    {
+      "id": "glm-4.7-flash",
+      "name": "GLM-4.7-Flash",
+      "family": "glm",
+      "params": "30B (about 3B active)",
+      "file": "zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/zai-org_GLM-4.7-Flash-GGUF/resolve/main/zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
+      "sha256": null,
+      "sizeBytes": 18500000000,
+      "minRamBytes": 24000000000,
+      "recRamBytes": 32000000000,
+      "kvBytesPerToken": 80000,
+      "license": {
+        "name": "MIT",
+        "url": "https://huggingface.co/bartowski/zai-org_GLM-4.7-Flash-GGUF"
+      },
+      "tier": 5,
+      "line": "Strongest here, needs a powerful PC with 32 GB or more of memory.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": [
+          "Turkish",
+          "Spanish",
+          "French",
+          "German",
+          "Portuguese",
+          "Italian",
+          "Russian",
+          "Arabic"
+        ]
+      },
+      "enabled": false
+    }
+  ]
+}

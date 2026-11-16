@@ -1,0 +1,89 @@
+{
+  "name": "study-desk",
+  "productName": "Study Desk",
+  "version": "1.0.0",
+  "description": "Study Desk: a personal student planner",
+  "author": "Study Desk",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dist": "electron-builder --win --x64 --publish never",
+    "dist:mac": "electron-builder --mac --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.3.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "app.studydesk.planner",
+    "productName": "Study Desk",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "security.js",
+      "ai/**/*",
+      "!ai/tools/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../app/index.html",
+        "to": "app/index.html"
+      }
+    ],
+    "publish": null,
+    "win": {
+      "icon": "icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Study-Desk-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "Study-Desk-${version}-portable.exe"
+    },
+    "mac": {
+      "category": "public.app-category.education",
+      "icon": "icon.png",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Study-Desk-${version}-mac-${arch}.${ext}"
+    }
+  }
+}

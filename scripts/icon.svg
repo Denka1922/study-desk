@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="224" fill="#2540D9"/>
+  <g transform="translate(512 512)">
+    <!-- open book -->
+    <path d="M-330 -190 Q-150 -240 0 -150 L0 250 Q-150 170 -330 220 Z" fill="#FFFFFF"/>
+    <path d="M330 -190 Q150 -240 0 -150 L0 250 Q150 170 330 220 Z" fill="#E8ECFD"/>
+    <!-- check mark -->
+    <path d="M-130 20 L-50 100 L120 -80" fill="none" stroke="#2540D9" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

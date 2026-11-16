@@ -1,0 +1,32 @@
+[
+  {
+    "id": "codex",
+    "name": "OpenAI Codex CLI",
+    "binaries": ["codex"],
+    "dataGoes": "cloud",
+    "install": "Install Node.js, then run: npm install -g @openai/codex",
+    "login": "Run \"codex login\" once in a terminal and sign in.",
+    "buildArgs": "codex",
+    "stdin": true
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini CLI",
+    "binaries": ["gemini"],
+    "dataGoes": "cloud",
+    "install": "Install Node.js, then run: npm install -g @google/gemini-cli",
+    "login": "Run \"gemini\" once in a terminal and sign in.",
+    "buildArgs": "gemini",
+    "stdin": true
+  },
+  {
+    "id": "goose",
+    "name": "goose",
+    "binaries": ["goose"],
+    "dataGoes": "depends",
+    "install": "Install goose from https://block.github.io/goose",
+    "login": "Run \"goose configure\" once in a terminal and choose an AI provider (a local one such as Ollama keeps your data on this computer).",
+    "buildArgs": "goose",
+    "stdin": true
+  }
+]

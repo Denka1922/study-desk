@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5UzFV6zaW4vNIpESzDrdoIiMdfr6/OOrfMImJSX9VJc='; style-src 'sha256-plQcsOF5wLlXtUNsg7s7wmCljqD43NWDUCBkt9E8Ac0='; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<title>Study Desk: download</title>
+<meta name="description" content="Download Study Desk, a personal student planner, for Windows and Android.">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#171A23; --muted:#5F6B85; --line:#E0E4EC;
+  --accent:#2540D9; --accent-ink:#FFFFFF; --accent-soft:#E8ECFD; --warn:#9A4A08; --warn-soft:#FDF0E3;
+  --f-body:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --f-mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme:dark;
+    --bg:#11141B; --surface:#1A1E28; --ink:#E8EBF2; --muted:#98A2B8; --line:#2A303D;
+    --accent:#8393FF; --accent-ink:#0E1220; --accent-soft:#232A4A; --warn:#F0B06A; --warn-soft:#2D2416;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);padding:32px 16px 48px}
+main{max-width:720px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;gap:14px;align-items:center;margin-bottom:8px}
+header svg{width:56px;height:56px;flex:none}
+h1{font-size:1.75rem;line-height:1.2;margin:0}
+h2{font-size:1.1rem;margin:0 0 8px}
+header p{margin:2px 0 0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.card p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.meta{font-family:var(--f-mono);font-size:.9rem}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent)}
+.btn.alt{background:transparent;color:var(--accent)}
+a{color:var(--accent)}
+a:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+ul{margin:8px 0 0;padding-left:20px}
+#file-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
+li{overflow-wrap:anywhere}
+.note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
+.note strong{color:var(--warn)}
+footer{color:var(--muted);font-size:.9rem}
+[hidden]{display:none!important}
+@media (max-width:420px){.btn{width:100%}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg viewBox="0 0 1024 1024" aria-hidden="true" focusable="false"><rect width="1024" height="1024" rx="224" fill="#2540D9"/><g transform="translate(512 512)"><path d="M-330 -190 Q-150 -240 0 -150 L0 250 Q-150 170 -330 220 Z" fill="#fff"/><path d="M330 -190 Q150 -240 0 -150 L0 250 Q150 170 330 220 Z" fill="#E8ECFD"/><path d="M-130 20 L-50 100 L120 -80" fill="none" stroke="#2540D9" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+    <div>
+      <h1>Study Desk</h1>
+      <p>Your calendar, exams, grades, deadlines and to-dos in one place.</p>
+    </div>
+  </header>
+
+  <section class="card" id="windows" aria-labelledby="win-h">
+    <h2 id="win-h">Windows</h2>
+    <div id="state" data-state="loading" aria-live="polite">
+      <p id="msg-loading" class="muted">Checking the latest version…</p>
+      <p id="msg-none" hidden>No version has been published yet.</p>
+      <p id="msg-error" hidden>Could not load the latest version from GitHub (it may be busy or limiting requests). <span id="error-link"></span></p>
+      <div id="loaded" hidden>
+        <p class="meta">Version <strong id="version"></strong> · <span id="date"></span></p>
+        <div class="btns" id="btns"></div>
+        <ul id="file-list"></ul>
+        <p id="msg-pending" class="muted" hidden>The Windows files are still being built. Try again in a few minutes.</p>
+      </div>
+    </div>
+    <div class="note">
+      <p><strong>Windows may say "unknown publisher".</strong> The program is not signed with a paid certificate yet, so Windows warns about every new program like this.</p>
+      <p>Click <b>More info</b>, then <b>Run anyway</b>. Use the installer for a normal install, or the portable file to run it from any folder without installing.</p>
+      <p>On some new Windows 11 PCs <b>Smart App Control</b> blocks every unsigned program and offers no "Run anyway". It is under Windows Security, App &amp; browser control, and once turned off it cannot be turned back on.</p>
+    </div>
+  </section>
+
+  <section class="card" id="android-card" aria-labelledby="and-h">
+    <h2 id="and-h">Android</h2>
+    <p id="android-text">Android: coming soon on Google Play</p>
+    <p class="muted">When it is published, install it from Google Play like any other app.</p>
+  </section>
+
+  <footer>
+    <p>Your planner data stays on your own device. Nothing is sent to us. If you use the AI Tutor, your questions go to the AI service you choose, using your own key; the Windows and Mac programs can also run the AI on your own computer or through a command-line tool you already use.</p>
+  </footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  // ---- Settings you may change ------------------------------------------
+  const PLAY_STORE_URL = "";  // After publishing: paste the Google Play address of the app here, then run: node scripts/check.js --stamp
+  const REPO_OVERRIDE = "";   // Only for a custom domain: "owner/repo"
+  // -----------------------------------------------------------------------
+
+  const PLAY_ID = 'app.studydesk.planner';
+  const $ = id => document.getElementById(id);
+
+  function setState(s) {
+    $('state').dataset.state = s;
+    $('msg-loading').hidden = s !== 'loading';
+    $('msg-none').hidden = s !== 'none';
+    $('msg-error').hidden = s !== 'error';
+    $('loaded').hidden = s !== 'loaded';
+  }
+
+  function repoFromAddress() {
+    let owner = '', repo = '';
+    if (REPO_OVERRIDE) {
+      [owner, repo] = REPO_OVERRIDE.split('/');
+    } else {
+      const m = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname);
+      const seg = location.pathname.split('/').filter(Boolean)[0];
+      if (m && seg) { owner = m[1]; repo = seg; }
+    }
+    if (!/^[A-Za-z0-9-]{1,39}$/.test(owner || '') || !/^[A-Za-z0-9._-]{1,100}$/.test(repo || '') || repo === '.' || repo === '..') return null;
+    return { owner, repo };
+  }
+
+  function safeDownload(u, repo) {
+    if (typeof u !== 'string') return null;
+    let x;
+    try { x = new URL(u); } catch (e) { return null; }
+    if (x.protocol !== 'https:' || x.hostname !== 'github.com' || x.username || x.password || x.port) return null;
+    const prefix = ('/' + repo.owner + '/' + repo.repo + '/releases/download/').toLowerCase();
+    return x.pathname.toLowerCase().startsWith(prefix) ? x.href : null;
+  }
+
+  function sizeText(n) {
+    return typeof n === 'number' && isFinite(n) && n > 0 ? (n / 1048576).toFixed(1) + ' MB' : '';
+  }
+
+  function pick(assets, re, repo) {
+    for (const a of assets) {
+      if (!a || typeof a.name !== 'string' || !re.test(a.name)) continue;
+      const url = safeDownload(a.browser_download_url, repo);
+      if (url) return { name: a.name, size: sizeText(a.size), url };
+    }
+    return null;
+  }
+
+  function button(id, label, file, alt) {
+    const a = document.createElement('a');
+    a.id = id;
+    a.className = 'btn' + (alt ? ' alt' : '');
+    a.href = file.url;
+    a.rel = 'noopener';
+    a.textContent = label;
+    $('btns').appendChild(a);
+    const li = document.createElement('li');
+    li.textContent = file.name + (file.size ? ' · ' + file.size : '');
+    $('file-list').appendChild(li);
+  }
+
+  function showLoaded(rel, repo) {
+    const tag = typeof rel.tag_name === 'string' ? rel.tag_name.replace(/^v/, '').slice(0, 40) : '';
+    const when = typeof rel.published_at === 'string' ? new Date(rel.published_at) : null;
+    $('version').textContent = tag;
+    $('date').textContent = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    const installer = pick(rel.assets, /^Study-Desk-Setup-.+\.exe$/, repo);
+    const portable = pick(rel.assets, /^Study-Desk-.+-portable\.exe$/, repo);
+    if (installer) button('btn-installer', 'Download the installer', installer, false);
+    if (portable) button('btn-portable', 'Download the portable version', portable, true);
+    $('msg-pending').hidden = !!(installer || portable);
+    setState('loaded');
+  }
+
+  async function load() {
+    const repo = repoFromAddress();
+    if (!repo) { setState('error'); return; }
+    const link = document.createElement('a');
+    link.id = 'releases-link';
+    link.href = 'https://github.com/' + repo.owner + '/' + repo.repo + '/releases/latest';
+    link.textContent = 'Open the releases page';
+    $('error-link').appendChild(link);
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 10000);
+    try {
+      const r = await fetch('https://api.github.com/repos/' + repo.owner + '/' + repo.repo + '/releases/latest',
+        { headers: { Accept: 'application/vnd.github+json' }, signal: ctl.signal, cache: 'no-store' });
+      if (r.status === 404) { setState('none'); return; }
+      if (!r.ok) throw new Error('status ' + r.status);
+      const rel = await r.json();
+      if (!rel || typeof rel !== 'object' || Array.isArray(rel) || !Array.isArray(rel.assets)) throw new Error('unexpected reply');
+      if (rel.draft === true || rel.prerelease === true) { setState('none'); return; }
+      showLoaded(rel, repo);
+    } catch (e) {
+      setState('error');
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function androidCard() {
+    let ok = false, x;
+    try {
+      x = new URL(PLAY_STORE_URL);
+      ok = x.protocol === 'https:' && x.hostname === 'play.google.com' && x.pathname === '/store/apps/details' && x.searchParams.get('id') === PLAY_ID;
+    } catch (e) { ok = false; }
+    if (!ok) return;
+    $('android-text').textContent = 'The Android app is on Google Play.';
+    const a = document.createElement('a');
+    a.id = 'android-link';
+    a.className = 'btn';
+    a.href = x.href;
+    a.rel = 'noopener';
+    a.textContent = 'Get it on Google Play';
+    const box = document.createElement('div');
+    box.className = 'btns';
+    box.appendChild(a);
+    $('android-card').insertBefore(box, $('android-card').children[2]);
+  }
+
+  androidCard();
+  load();
+})();
+</script>
+</body>
+</html>
