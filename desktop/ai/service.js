@@ -38,7 +38,7 @@ function createAiService(deps) {
 
   deps.engine.onExit(() => { running = null; conn = null; });
 
-  const modelById = id => (typeof id === 'string' && ID_RE.test(id) ? catalog.models.find(m => m.id === id) : null);
+  const modelById = id => (typeof id === 'string' && ID_RE.test(id) ? catalog.models.find(m => m.id === id && !m.listOnly) : null);
   const modelFile = m => path.join(modelsDir, m.file);
   const checkLevel = l => { if (!LEVEL_ORDER.includes(l)) throw bad('Unknown power level.'); };
   const clearIdle = () => { if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; } };
@@ -71,6 +71,11 @@ function createAiService(deps) {
       id: m.id, name: m.name, params: m.params, sizeBytes: m.sizeBytes, line: m.line, tier: m.tier, license: { name: m.license.name, url: m.license.url },
       fit: languageFit(m, language), fits: hardware.totalRamBytes >= m.minRamBytes && estimateNeedBytes(m, b.ctx) <= b.ramBytes,
     }));
+    // models no normal PC can run are listed too, so the student sees why they are not offered
+    for (const m of catalog.models.filter(x => x.listOnly)) {
+      models.push({ id: m.id, name: m.name, params: m.params, sizeBytes: null, line: m.line, tier: m.tier, license: { name: m.license.name, url: m.license.url },
+        fit: languageFit(m, language), fits: false, tooBig: true, needs: m.needs });
+    }
     return Object.assign({}, rec, { models });
   }
 
@@ -78,6 +83,7 @@ function createAiService(deps) {
     const hardware = await deps.hardwareReader();
     const installed = [];
     for (const m of catalog.models) {
+      if (m.listOnly) continue;
       try { const st = fs.statSync(modelFile(m)); if (st.isFile()) installed.push({ modelId: m.id, sizeBytes: st.size }); } catch (e) { /* not installed */ }
     }
     const asset = engineAssetFor(hardware);

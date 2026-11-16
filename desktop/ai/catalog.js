@@ -39,6 +39,12 @@ function validateCatalog(c) {
     seen.add(m.id);
     if (!m.license || !m.license.name) bad.push(m.id + ': license missing');
     if (!m.languages || !Array.isArray(m.languages.strong) || m.languages.strong.length === 0) bad.push(m.id + ': languages.strong missing');
+    if (m.listOnly) {
+      // shown to the student as "too big for this PC"; nothing about it can be downloaded
+      if (m.enabled || m.url || m.file || m.sha256) bad.push(m.id + ': a list-only model must not be enabled or have a download');
+      if (typeof m.needs !== 'string' || m.needs.length < 10) bad.push(m.id + ': a list-only model needs a "needs" sentence');
+      continue;
+    }
     if (!hostAllowed(m.url) || !String(m.url).endsWith(m.file)) bad.push(m.id + ': url must be an allowed host and end with the file name');
     if (m.enabled) {
       if (!HEX64.test(m.sha256 || '')) bad.push(m.id + ': enabled model needs a 64-hex sha256');

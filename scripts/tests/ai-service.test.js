@@ -248,8 +248,9 @@ test('recommend also lists every enabled model with a fits flag for the chosen l
   const light = await r.svc.recommend({ level: 'light', language: 'Turkish' });
   const max = await r.svc.recommend({ level: 'max', language: 'English' });
   for (const rec of [light, max]) {
-    assert.deepStrictEqual(rec.models.map(m => m.id).sort(), [model4, model9].sort(), 'only enabled models');
-    for (const m of rec.models) {
+    assert.deepStrictEqual(rec.models.filter(m => !m.tooBig).map(m => m.id).sort(), [model4, model9].sort(), 'only enabled models can be downloaded');
+    assert.ok(rec.models.filter(m => m.tooBig).length >= 3, 'the too-big models are listed too');
+    for (const m of rec.models.filter(x => !x.tooBig)) {
       assert.strictEqual(typeof m.fits, 'boolean'); assert.ok(m.name && m.line && m.sizeBytes > 0 && m.license.name && /^https:/.test(m.license.url), m.id);
       assert.ok(['strong', 'fair', 'weak'].includes(m.fit), m.id); assert.strictEqual(m.sha256, undefined, 'internal fields are not sent');
     }
@@ -258,7 +259,7 @@ test('recommend also lists every enabled model with a fits flag for the chosen l
   assert.strictEqual(max.models.find(m => m.id === model9).fits, true);
   assert.strictEqual(light.models.find(m => m.id === model4).fit, 'weak', 'Turkish is weak for the 4B model');
   const tiny = await rig({ hardware: hw(3) }).svc.recommend({ level: 'max', language: 'English' });
-  assert.strictEqual(tiny.ok, false); assert.ok(tiny.models.length === 2 && tiny.models.every(m => m.fits === false), 'a too-small PC still gets the list, with nothing fitting');
+  assert.strictEqual(tiny.ok, false); assert.ok(tiny.models.filter(m => !m.tooBig).length === 2 && tiny.models.every(m => m.fits === false), 'a too-small PC still gets the list, with nothing fitting');
 });
 
 test('a too-large answer allowance is trimmed to fit the context instead of refusing the question', async () => {
@@ -299,4 +300,19 @@ test('review: two overlapping start calls for the same model start one engine', 
   const [a, b] = await Promise.all([r.svc.start({ modelId: model4, level: 'high' }), r.svc.start({ modelId: model4, level: 'high' })]);
   assert.deepStrictEqual(a.running, b.running);
   assert.strictEqual(r.calls.engineStart.length, 1);
+});
+
+test('recommend lists too-big models as unavailable with a plain need, and they cannot be installed', async () => {
+  const r = rig({ hardware: hw(64) });
+  const rec = await r.svc.recommend({ level: 'max', language: 'English' });
+  const ultra = rec.models.find(m => m.id === 'nemotron-3-ultra-550b-a55b');
+  assert.ok(ultra, 'Ultra is listed');
+  assert.strictEqual(ultra.tooBig, true); assert.strictEqual(ultra.fits, false);
+  assert.ok(ultra.needs.length > 10);
+  for (const k of ['url', 'file', 'sha256', 'minRamBytes', 'kvBytesPerToken']) assert.ok(!(k in ultra), k + ' must not reach the page');
+  assert.ok(rec.models.filter(m => !m.tooBig).every(m => m.fits === true || m.fits === false));
+  assert.strictEqual((await err(r.svc.install({ modelId: 'nemotron-3-ultra-550b-a55b', level: 'max' }))).kind, 'bad');
+  assert.strictEqual(r.calls.download.length, 0);
+  const st = await r.svc.localStatus();
+  assert.ok(Array.isArray(st.installed));
 });

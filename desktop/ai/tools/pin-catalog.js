@@ -32,6 +32,7 @@ async function main() {
   const say = (ok, msg) => { if (!ok) bad++; console.log((ok ? 'ok   ' : 'FAIL ') + msg); };
 
   for (const m of c.models) {
+    if (m.listOnly) { console.log('skip ' + m.id + ' (list-only: too big for normal PCs)'); continue; }
     if (mode === '--verify' && !m.enabled) { console.log('skip ' + m.id + ' (not enabled)'); continue; }
     try {
       const f = await hfFacts(m.url);

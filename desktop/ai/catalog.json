@@ -146,8 +146,8 @@
         "name": "MIT",
         "url": "https://huggingface.co/bartowski/zai-org_GLM-4.7-Flash-GGUF"
       },
-      "tier": 5,
-      "line": "Strongest here, needs a powerful PC with 32 GB or more of memory.",
+      "tier": 4,
+      "line": "Very strong 30B model from Z.ai. Needs a computer with 32 GB of memory. Best in English and Chinese.",
       "languages": {
         "strong": [
           "English"
@@ -164,6 +164,222 @@
         ]
       },
       "enabled": false
+    },
+    {
+      "id": "nemotron-3.5-bolt-e4b",
+      "name": "NVIDIA Nemotron 3.5 Bolt E4B",
+      "family": "nemotron",
+      "params": "8B (4B working)",
+      "file": "Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/resolve/main/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf",
+      "sha256": null,
+      "sizeBytes": 6180000000,
+      "minRamBytes": 8000000000,
+      "recRamBytes": 16000000000,
+      "kvBytesPerToken": 65536,
+      "license": {
+        "name": "OpenMDW-1.1",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB"
+      },
+      "tier": 3,
+      "line": "NVIDIA's new small model for ordinary PCs. Best in English.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": []
+      },
+      "enabled": false
+    },
+    {
+      "id": "nemotron-3-nano-30b-a3b",
+      "name": "NVIDIA Nemotron 3 Nano 30B",
+      "family": "nemotron",
+      "params": "30B (about 3B working)",
+      "file": "nvidia_Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf",
+      "url": "https://huggingface.co/bartowski/nvidia_Nemotron-3-Nano-30B-A3B-GGUF/resolve/main/nvidia_Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf",
+      "sha256": null,
+      "sizeBytes": 18130000000,
+      "minRamBytes": 24000000000,
+      "recRamBytes": 32000000000,
+      "kvBytesPerToken": 49152,
+      "license": {
+        "name": "NVIDIA Open Model License",
+        "url": "https://huggingface.co/bartowski/nvidia_Nemotron-3-Nano-30B-A3B-GGUF"
+      },
+      "tier": 4,
+      "line": "Big and quick for its size. Needs a computer with 32 GB of memory.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": [
+          "German",
+          "Spanish",
+          "French",
+          "Italian"
+        ]
+      },
+      "enabled": false
+    },
+    {
+      "id": "nemotron-3.5-lightning-30b-a3b",
+      "name": "NVIDIA Nemotron 3.5 Lightning 30B",
+      "family": "nemotron",
+      "params": "30B (about 3B working)",
+      "file": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-Q4_0.gguf",
+      "url": "https://huggingface.co/ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/resolve/main/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-Q4_0.gguf",
+      "sha256": null,
+      "sizeBytes": 18900000000,
+      "minRamBytes": 24000000000,
+      "recRamBytes": 32000000000,
+      "kvBytesPerToken": 49152,
+      "license": {
+        "name": "OpenMDW-1.1",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16"
+      },
+      "tier": 5,
+      "line": "NVIDIA's newest fast model. Very strong, but needs a computer with 32 GB of memory.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": [
+          "German",
+          "Spanish",
+          "French",
+          "Italian"
+        ]
+      },
+      "enabled": false
+    },
+    {
+      "id": "glm-4-9b-0414",
+      "name": "GLM-4 9B",
+      "family": "glm",
+      "params": "9B",
+      "file": "THUDM_GLM-4-9B-0414-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/THUDM_GLM-4-9B-0414-GGUF/resolve/main/THUDM_GLM-4-9B-0414-Q4_K_M.gguf",
+      "sha256": null,
+      "sizeBytes": 6000000000,
+      "minRamBytes": 10000000000,
+      "recRamBytes": 16000000000,
+      "kvBytesPerToken": 65536,
+      "license": {
+        "name": "MIT",
+        "url": "https://huggingface.co/bartowski/THUDM_GLM-4-9B-0414-GGUF"
+      },
+      "tier": 3,
+      "line": "A clear, careful teacher for 16 GB computers. Best in English and Chinese.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": [
+          "Turkish",
+          "Spanish",
+          "French",
+          "German"
+        ]
+      },
+      "enabled": false
+    },
+    {
+      "id": "qwen3-8b",
+      "name": "Qwen3 8B",
+      "family": "qwen",
+      "params": "8B",
+      "file": "Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "sha256": null,
+      "sizeBytes": 5030000000,
+      "minRamBytes": 8000000000,
+      "recRamBytes": 16000000000,
+      "kvBytesPerToken": 147456,
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen3-8B"
+      },
+      "tier": 4,
+      "line": "Strong in many languages, including Turkish. Good for 16 GB computers.",
+      "languages": {
+        "strong": [
+          "English",
+          "Turkish",
+          "Spanish",
+          "French",
+          "German",
+          "Portuguese",
+          "Italian",
+          "Russian",
+          "Arabic"
+        ],
+        "fair": []
+      },
+      "enabled": false
+    },
+    {
+      "id": "nemotron-3-super-120b-a12b",
+      "name": "NVIDIA Nemotron 3 Super 120B",
+      "family": "nemotron",
+      "params": "120B (about 12B working)",
+      "listOnly": true,
+      "enabled": false,
+      "license": {
+        "name": "NVIDIA Nemotron Open Model License",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16"
+      },
+      "tier": 6,
+      "line": "Very strong, but made for datacenter graphics cards.",
+      "needs": "Needs about 70 GB of fast memory even when shrunk, or several datacenter graphics cards. A normal PC cannot run it.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": []
+      }
+    },
+    {
+      "id": "nemotron-3.5-super-vl-120b-a12b",
+      "name": "NVIDIA Nemotron 3.5 Super VL 120B",
+      "family": "nemotron",
+      "params": "120B (about 12B working)",
+      "listOnly": true,
+      "enabled": false,
+      "license": {
+        "name": "OpenMDW-1.1",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16"
+      },
+      "tier": 6,
+      "line": "Newest Super model, reads pictures too. Made for datacenter graphics cards.",
+      "needs": "Needs several datacenter graphics cards (for example 4 H100). A normal PC cannot run it.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": []
+      }
+    },
+    {
+      "id": "nemotron-3-ultra-550b-a55b",
+      "name": "NVIDIA Nemotron 3 Ultra 550B",
+      "family": "nemotron",
+      "params": "550B (about 55B working)",
+      "listOnly": true,
+      "enabled": false,
+      "license": {
+        "name": "OpenMDW-1.1",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B"
+      },
+      "tier": 6,
+      "line": "NVIDIA's biggest model. It runs in datacenters only.",
+      "needs": "Needs at least 8 datacenter graphics cards (B200 class or H200). No PC or Mac can run it.",
+      "languages": {
+        "strong": [
+          "English"
+        ],
+        "fair": []
+      }
     }
   ]
 }

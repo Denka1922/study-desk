@@ -81,3 +81,36 @@ test('verify-catalog workflow is manual-only with read-only permissions', () => 
   assert.match(y, /permissions:\s*\n\s*contents: read/);
   assert.match(y, /pin-catalog\.js --verify/);
 });
+
+const TOO_BIG = ['nemotron-3-super-120b-a12b', 'nemotron-3.5-super-vl-120b-a12b', 'nemotron-3-ultra-550b-a55b'];
+
+test('the catalog lists the Nemotron 3.5 Lightning 30B model', () => {
+  const m = loadCatalog().models.find(x => x.id === 'nemotron-3.5-lightning-30b-a3b');
+  assert.ok(m, 'Lightning is in the catalog');
+  assert.strictEqual(m.family, 'nemotron');
+  assert.match(m.url, /^https:\/\/huggingface\.co\/.+\/resolve\/(main|[0-9a-f]{40})\//);
+});
+
+test('Super and Ultra are listed as too big for normal PCs and can never be downloaded', () => {
+  const c = loadCatalog();
+  for (const id of TOO_BIG) {
+    const m = c.models.find(x => x.id === id);
+    assert.ok(m, id + ' is listed');
+    assert.strictEqual(m.listOnly, true, id);
+    assert.strictEqual(m.enabled, false, id);
+    assert.ok(typeof m.needs === 'string' && m.needs.length > 10, id + ' says what it needs');
+    assert.ok(!m.url && !m.file && !m.sha256, id + ' has no download');
+    assert.ok(m.license && m.license.name, id + ' has a licence');
+  }
+  assert.deepStrictEqual(validateCatalog(c), []);
+});
+
+test('validateCatalog rejects a list-only model that is enabled or has a download address', () => {
+  const clone = () => JSON.parse(JSON.stringify(loadCatalog()));
+  let c = clone(); c.models.find(m => m.id === TOO_BIG[0]).enabled = true;
+  assert.ok(validateCatalog(c).some(p => /list-only/i.test(p)));
+  c = clone(); c.models.find(m => m.id === TOO_BIG[0]).url = 'https://huggingface.co/x/y/resolve/main/z.gguf';
+  assert.ok(validateCatalog(c).some(p => /list-only/i.test(p)));
+  c = clone(); delete c.models.find(m => m.id === TOO_BIG[0]).needs;
+  assert.ok(validateCatalog(c).some(p => /needs/i.test(p)));
+});

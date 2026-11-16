@@ -15,7 +15,7 @@ const hw = (gib, o = {}) => Object.assign({
 // the shipped catalog, with the not-yet-confirmed models switched on so the table can be exercised
 function allOn() {
   const c = loadCatalog();
-  for (const m of c.models) { m.enabled = true; m.sha256 = m.sha256 || 'a'.repeat(64); }
+  for (const m of c.models) { if (m.listOnly) continue; m.enabled = true; m.sha256 = m.sha256 || 'a'.repeat(64); }
   return c;
 }
 
@@ -108,14 +108,17 @@ test('16 GB at High gets a 9B-class model; the shipped catalog never offers disa
   assert.notStrictEqual(r32.model.id, 'glm-4.7-flash');
 });
 
-test('32 GB at xhigh gets GLM-4.7-Flash once it is enabled and fits', () => {
+test('32 GB at xhigh gets Nemotron 3.5 Lightning once it is enabled and fits', () => {
   const r = recommend({ hardware: hw(32, { freeRamBytes: 28 * GiB }), level: 'xhigh', language: 'English', catalog: allOn() });
-  assert.strictEqual(r.model.id, 'glm-4.7-flash');
+  assert.strictEqual(r.model.id, 'nemotron-3.5-lightning-30b-a3b');
+  const c = allOn(); c.models = c.models.filter(m => m.id !== 'nemotron-3.5-lightning-30b-a3b');
+  // among equal tiers the smaller file wins, so without Lightning the 8B Qwen3 is chosen
+  assert.strictEqual(recommend({ hardware: hw(32, { freeRamBytes: 28 * GiB }), level: 'xhigh', language: 'English', catalog: c }).model.id, 'qwen3-8b');
 });
 
 test('Turkish prefers a strong Turkish model when the tier loss is one step', () => {
   const r = recommend({ hardware: hw(16), level: 'high', language: 'Turkish', catalog: allOn() });
-  assert.strictEqual(r.model.id, 'qwen3-4b'); assert.strictEqual(r.languageFit, 'strong');
+  assert.strictEqual(r.model.id, 'qwen3-8b'); assert.strictEqual(r.languageFit, 'strong');
 });
 
 test('when only a weak-language model fits, the answer says so in plain words', () => {
@@ -127,7 +130,7 @@ test('when only a weak-language model fits, the answer says so in plain words', 
 test('upgrade is the next larger enabled model that fits one level higher, else null', () => {
   const big = hw(32, { freeRamBytes: 28 * GiB });
   const up = recommend({ hardware: big, level: 'high', language: 'English', catalog: allOn() });
-  assert.strictEqual(up.model.id, 'nemotron-nano-9b-v2'); assert.strictEqual(up.upgrade.id, 'glm-4.7-flash');
+  assert.strictEqual(up.model.id, 'qwen3-8b'); assert.strictEqual(up.upgrade.id, 'nemotron-3.5-lightning-30b-a3b');
   assert.strictEqual(recommend({ hardware: big, level: 'max', language: 'English', catalog: allOn() }).upgrade, null);
   assert.strictEqual(recommend({ hardware: hw(8), level: 'high', language: 'English', catalog: loadCatalog() }).upgrade, null);
 });
@@ -140,4 +143,21 @@ test('Linux or an unknown platform is not supported for Local', () => {
 test('the reasons list says how much memory the choice uses', () => {
   const r = recommend({ hardware: hw(16), level: 'high', language: 'English', catalog: loadCatalog() });
   assert.ok(r.reasons.some(s => /GB/.test(s)));
+});
+
+test('a list-only model is never recommended, even on a huge computer', () => {
+  const catalog = loadCatalog();
+  const hardware = { platform: 'win32', arch: 'x64', totalRamBytes: 2048 * 2 ** 30, freeRamBytes: 2000 * 2 ** 30, cpuThreads: 64, gpus: [] };
+  for (const level of LEVEL_ORDER) {
+    const r = recommend({ hardware, level, language: 'English', catalog });
+    if (r.ok) assert.ok(!r.model.listOnly, level + ' picked ' + r.model.id);
+  }
+});
+
+test('a Turkish student on a 32 GB computer still gets a strong-Turkish model, not the weak-Turkish top model', () => {
+  const hardware = hw(32, { freeRamBytes: 28 * GiB });
+  const r = recommend({ hardware, level: 'max', language: 'Turkish', catalog: allOn() });
+  assert.strictEqual(r.ok, true); assert.strictEqual(r.languageFit, 'strong'); assert.strictEqual(r.model.id, 'qwen3-8b');
+  const en = recommend({ hardware, level: 'max', language: 'English', catalog: allOn() });
+  assert.strictEqual(en.model.id, 'nemotron-3.5-lightning-30b-a3b');
 });
