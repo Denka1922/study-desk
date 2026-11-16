@@ -96,7 +96,3 @@ Use [TEST-CHECKLIST.md](TEST-CHECKLIST.md) to check these, and please open an is
 `app/index.html` is generated from a set of page source parts and a build script that are **not part of this repository yet**. Until they are added, changes to the page itself are made by the maintainer; everything else (the Electron program, the AI code in `desktop/ai/`, the Android project, the download page, the scripts and the tests) can be changed here directly.
 
 Write a failing test first, then the fix, and run `node scripts/check.js --ci` before opening a pull request.
-
-## Licence
-
-No licence file has been added yet. Until one is added, all rights are reserved by the owner.
