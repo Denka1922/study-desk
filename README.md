@@ -12,7 +12,9 @@ Study Desk is one web page (`app/index.html`) that is packaged three ways:
 | Android | Capacitor project | you build it in Android Studio (no APK is published on GitHub) |
 | Web | a download page (`site/index.html`) | published with GitHub Pages |
 
-See [INSTALLATION.md](INSTALLATION.md) to install or build it.
+**Download:** https://denka1922.github.io/study-desk/ has a tab for Windows, Mac and Android and always offers the newest version.
+
+See [INSTALLATION.md](INSTALLATION.md) for step-by-step install and build instructions.
 
 ## Features
 

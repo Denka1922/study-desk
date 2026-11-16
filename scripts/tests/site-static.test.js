@@ -41,3 +41,9 @@ function staticRules(h) {
 test('the shipped page follows the static rules', () => staticRules(html()));
 test('the rules still hold after the user sets the Play Store address and re-stamps', () => staticRules(withPlay(html(), PLAY)));
 test('the page tells people about Smart App Control', () => assert.match(html(), /Smart App Control/));
+test('the page tells Mac people about Open Anyway and covers Windows, Mac and Android', () => {
+  const h = html();
+  assert.match(h, /Open Anyway/);
+  assert.match(h, /<meta name="description" content="[^"]*Windows, Mac and Android/);
+  for (const id of ['tab-windows', 'tab-mac', 'tab-android']) assert.ok(h.includes('id="' + id + '"'), id);
+});

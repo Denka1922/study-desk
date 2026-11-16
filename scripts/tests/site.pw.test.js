@@ -17,6 +17,10 @@ function release(over = {}) {
       { name: 'Study-Desk-1.2.0-portable.exe', size: 81000000, browser_download_url: DL + 'Study-Desk-1.2.0-portable.exe' },
       { name: 'Study-Desk-Setup-1.2.0.exe.blockmap', size: 90000, browser_download_url: DL + 'Study-Desk-Setup-1.2.0.exe.blockmap' },
       { name: 'latest.yml', size: 400, browser_download_url: DL + 'latest.yml' },
+      { name: 'Study-Desk-1.2.0-mac-arm64.dmg', size: 95000000, browser_download_url: DL + 'Study-Desk-1.2.0-mac-arm64.dmg' },
+      { name: 'Study-Desk-1.2.0-mac-arm64.zip', size: 91000000, browser_download_url: DL + 'Study-Desk-1.2.0-mac-arm64.zip' },
+      { name: 'Study-Desk-1.2.0-mac-x64.dmg', size: 99000000, browser_download_url: DL + 'Study-Desk-1.2.0-mac-x64.dmg' },
+      { name: 'Study-Desk-1.2.0-mac-x64.zip', size: 96000000, browser_download_url: DL + 'Study-Desk-1.2.0-mac-x64.zip' },
     ],
     ...over,
   };
@@ -32,8 +36,8 @@ function pageSource(playUrl) {
   return SRC.replace(script, () => changed).replace(old, h);
 }
 
-async function open(browser, { api = { status: 200, body: release() }, url = PAGE, play, width = 1280, scheme = 'light', wait = true } = {}) {
-  const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+async function open(browser, { api = { status: 200, body: release() }, url = PAGE, play, width = 1280, scheme = 'light', wait = true, ua } = {}) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, ...(ua ? { userAgent: ua } : {}) });
   const page = await ctx.newPage();
   const errs = []; const hosts = new Set();
   page.on('pageerror', e => errs.push(e.message));
@@ -202,8 +206,10 @@ test('layout at phone, tablet and desktop widths, light and dark', () => withBro
   assert.ok(lum(colors[0]) < 0.2 && lum(colors[1]) > 0.6, JSON.stringify(colors));
 }));
 
-test('keyboard: Tab reaches the installer button first, then the portable one', () => withBrowser(async b => {
+test('keyboard: Tab reaches the selected tab first, then the installer button, then the portable one', () => withBrowser(async b => {
   const { page } = await open(b);
+  await page.keyboard.press('Tab');
+  assert.strictEqual(await page.evaluate(() => document.activeElement.id), 'tab-windows');
   await page.keyboard.press('Tab');
   assert.strictEqual(await page.evaluate(() => document.activeElement.id), 'btn-installer');
   await page.keyboard.press('Tab');
@@ -221,4 +227,73 @@ test('null date shows no date; a release without usable files says they are stil
   }
   const ok = await open(b);
   assert.doesNotMatch(await ok.page.locator('#state').innerText(), /still being built/i);
+}));
+
+const MAC_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36';
+const visible = (p, sel) => p.locator(sel).isVisible();
+const selected = async p => p.evaluate(() => [...document.querySelectorAll('[role=tab]')].filter(t => t.getAttribute('aria-selected') === 'true').map(t => t.id));
+
+test('three tabs: Windows, Mac and Android, one panel visible at a time', () => withBrowser(async b => {
+  const { page, errs } = await open(b);
+  assert.deepStrictEqual(await page.locator('[role=tab]').allInnerTexts(), ['Windows', 'Mac', 'Android']);
+  assert.deepStrictEqual(await selected(page), ['tab-windows']);
+  assert.ok(await visible(page, '#windows')); assert.ok(!(await visible(page, '#mac'))); assert.ok(!(await visible(page, '#android-card')));
+  await page.click('#tab-mac');
+  assert.deepStrictEqual(await selected(page), ['tab-mac']);
+  assert.ok(!(await visible(page, '#windows'))); assert.ok(await visible(page, '#mac'));
+  await page.click('#tab-android');
+  assert.ok(await visible(page, '#android-card')); assert.ok(!(await visible(page, '#mac')));
+  await page.focus('#tab-android'); await page.keyboard.press('ArrowLeft');
+  assert.deepStrictEqual(await selected(page), ['tab-mac']);
+  await page.keyboard.press('Home');
+  assert.deepStrictEqual(await selected(page), ['tab-windows']);
+  await page.keyboard.press('End');
+  assert.deepStrictEqual(await selected(page), ['tab-android']);
+  assert.deepStrictEqual(errs, []);
+}));
+
+test('the first tab matches the visitor\'s system', () => withBrowser(async b => {
+  assert.deepStrictEqual(await selected((await open(b, { ua: MAC_UA })).page), ['tab-mac']);
+  assert.deepStrictEqual(await selected((await open(b, { ua: ANDROID_UA })).page), ['tab-android']);
+  assert.deepStrictEqual(await selected((await open(b)).page), ['tab-windows']);
+}));
+
+test('Mac tab: four downloads with safe links, sizes, which-one help and the Open Anyway steps', () => withBrowser(async b => {
+  const { page, errs, hosts } = await open(b);
+  await page.click('#tab-mac');
+  assert.strictEqual(await href(page, '#btn-mac-arm64'), DL + 'Study-Desk-1.2.0-mac-arm64.dmg');
+  assert.strictEqual(await href(page, '#btn-mac-x64'), DL + 'Study-Desk-1.2.0-mac-x64.dmg');
+  assert.strictEqual(await href(page, '#btn-mac-arm64-zip'), DL + 'Study-Desk-1.2.0-mac-arm64.zip');
+  assert.strictEqual(await href(page, '#btn-mac-x64-zip'), DL + 'Study-Desk-1.2.0-mac-x64.zip');
+  assert.match(await page.locator('#btn-mac-arm64').innerText(), /Apple Silicon/);
+  assert.match(await page.locator('#btn-mac-x64').innerText(), /Intel/);
+  const items = await page.locator('#mac-list li').allInnerTexts();
+  assert.strictEqual(items.length, 4);
+  assert.match(items[0], /mac-arm64\.dmg/); assert.match(items[0], /90\.6 MB/);
+  const t = await page.locator('#mac').innerText();
+  assert.match(t, /About This Mac/); assert.match(t, /Open Anyway/); assert.match(t, /not signed by Apple/i);
+  assert.deepStrictEqual([...hosts].sort(), ['alice.github.io', 'api.github.com']);
+  assert.deepStrictEqual(errs, []);
+}));
+
+test('Mac tab: missing files say so, and links outside this repository are dropped', () => withBrowser(async b => {
+  const none = release(); none.assets = none.assets.slice(0, 2);
+  const a = await open(b, { api: { status: 200, body: none } });
+  await a.page.click('#tab-mac');
+  assert.strictEqual(await a.page.locator('#btn-mac-arm64, #btn-mac-x64, #btn-mac-arm64-zip, #btn-mac-x64-zip').count(), 0);
+  assert.match(await a.page.locator('#mac').innerText(), /No Mac files in this version yet/);
+  assert.doesNotMatch(await a.page.locator('#state').innerText(), /still being built/i);
+  const evil = release({ assets: [{ name: 'Study-Desk-1.2.0-mac-arm64.dmg', size: 1, browser_download_url: 'https://evil.com/alice/study-desk/releases/download/v1/x.dmg' }] });
+  const e = await open(b, { api: { status: 200, body: evil } });
+  assert.strictEqual(await e.page.locator('#btn-mac-arm64').count(), 0);
+}));
+
+test('Mac only release: not "still being built"', () => withBrowser(async b => {
+  const r = release(); r.assets = r.assets.slice(4);
+  const { page } = await open(b, { api: { status: 200, body: r } });
+  assert.strictEqual(await state(page), 'loaded');
+  assert.doesNotMatch(await page.locator('#state').innerText(), /still being built/i);
+  await page.click('#tab-windows');
+  assert.match(await page.locator('#windows').innerText(), /No Windows files in this version yet/);
 }));

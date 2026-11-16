@@ -1,5 +1,7 @@
 # Installation
 
+**Easiest way: open the download page** at **https://denka1922.github.io/study-desk/**. It has a tab for Windows, Mac and Android and always shows the newest version, so you do not need to look through GitHub.
+
 Pick your platform:
 
 - [Windows](#windows)
@@ -10,7 +12,7 @@ Pick your platform:
 - [Publishing a release on GitHub](#publishing-a-release-on-github)
 - [Troubleshooting](#troubleshooting)
 
-Replace `<your-username>` below with the GitHub account that owns the repository.
+Where the guide shows `<your-username>`, use the GitHub account that owns the repository.
 
 ---
 
@@ -18,10 +20,9 @@ Replace `<your-username>` below with the GitHub account that owns the repository
 
 **Requirements:** Windows 10 or 11, 64-bit.
 
-1. Open the repository's **Releases** page: `https://github.com/<your-username>/study-desk/releases`.
-2. Download one of:
-   - `Study-Desk-Setup-<version>.exe`: the installer (installs for your user only, adds a Start menu and desktop shortcut).
-   - `Study-Desk-<version>-portable.exe`: runs without installing.
+1. Open the download page: **https://denka1922.github.io/study-desk/** (the **Windows** tab opens by itself on a Windows PC).
+2. Click **Download the installer**. This is the file `Study-Desk-Setup-<version>.exe`. It installs for your user only and adds a Start menu and desktop shortcut.
+   - Prefer not to install? Click **Download the portable version** (`Study-Desk-<version>-portable.exe`). It runs from any folder without installing.
 3. Optional check: compare the file's fingerprint with the SHA-256 value in the release notes.
    ```
    certutil -hashfile Study-Desk-Setup-<version>.exe SHA256
@@ -30,7 +31,7 @@ Replace `<your-username>` below with the GitHub account that owns the repository
 
 **"Windows protected your PC" / "unknown publisher".** The program is not signed with a paid certificate. Click **More info**, then **Run anyway**.
 
-On some new Windows 11 PCs **Smart App Control** blocks unsigned programs completely and offers no "Run anyway". Either turn Smart App Control off (Windows Security, App and browser control, Smart App Control settings; this cannot be turned back on without resetting Windows) or use the web version.
+On some new Windows 11 PCs **Smart App Control** blocks unsigned programs completely and offers no "Run anyway". The only way around it is to turn Smart App Control off (Windows Security, App and browser control, Smart App Control settings). It cannot be turned back on without resetting Windows.
 
 **Installing a new version** over an old one keeps your data.
 
@@ -49,7 +50,7 @@ copy /b Study-Desk-Setup-<version>.exe.001 + Study-Desk-Setup-<version>.exe.002 
 1. Find your chip: Apple menu, **About This Mac**.
    - "Chip: Apple M..." means download the `arm64` file.
    - "Processor: Intel..." means download the `x64` file.
-2. From the **Releases** page, download `Study-Desk-<version>-mac-arm64` or `Study-Desk-<version>-mac-x64` (each comes as a `.dmg` and a `.zip`; use either one).
+2. Open the download page **https://denka1922.github.io/study-desk/** and click the **Mac** tab (it opens by itself on a Mac). Click **Download for Apple Silicon** or **Download for Intel**. Each comes as a `.dmg` and a `.zip`; use either one.
 3. Open the `.dmg` (or double-click the `.zip`), then drag **Study Desk** into **Applications**.
 4. First open. The app is signed with a free "ad-hoc" signature, not by Apple, so macOS blocks it once:
    - **macOS 15 or newer:** double-click Study Desk, press **Done** on the warning, then open **System Settings, Privacy & Security**, scroll down, click **Open Anyway** and enter your password.
@@ -74,7 +75,7 @@ The printed number must match the fingerprint that came with the files.
 
 ## Android
 
-Android is **not** distributed as an APK on GitHub. You build it yourself in Android Studio.
+Android is **not** distributed as a file on GitHub. Once the app is published, the **Android** tab of the download page links to Google Play. Until then you build it yourself in Android Studio.
 
 **Requirements:** [Android Studio](https://developer.android.com/studio) (current stable), Node.js 22 or newer.
 

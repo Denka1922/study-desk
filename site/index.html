@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5UzFV6zaW4vNIpESzDrdoIiMdfr6/OOrfMImJSX9VJc='; style-src 'sha256-plQcsOF5wLlXtUNsg7s7wmCljqD43NWDUCBkt9E8Ac0='; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0dZpz6kjtLPoxMPe90uR6fw1m/o6BP51S1Xuz7dxu+s='; style-src 'sha256-tp46VuiN/XVZeBy2MK6Wj4NZWI47a6XaV4w+5jyC79w='; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <title>Study Desk: download</title>
-<meta name="description" content="Download Study Desk, a personal student planner, for Windows and Android.">
+<meta name="description" content="Download Study Desk, a personal student planner, for Windows, Mac and Android.">
 <style>
 :root{
   color-scheme:light;
@@ -37,9 +37,14 @@ header p{margin:2px 0 0;color:var(--muted)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent)}
 .btn.alt{background:transparent;color:var(--accent)}
 a{color:var(--accent)}
-a:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+a:focus-visible,.btn:focus-visible,.tab:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 ul{margin:8px 0 0;padding-left:20px}
-#file-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{flex:1 1 0;min-height:44px;padding:10px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.steps{margin:8px 0 0;padding-left:20px}
+.steps li{margin-bottom:4px}
+#file-list li,#mac-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
 li{overflow-wrap:anywhere}
 .note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
 .note strong{color:var(--warn)}
@@ -58,19 +63,30 @@ footer{color:var(--muted);font-size:.9rem}
     </div>
   </header>
 
-  <section class="card" id="windows" aria-labelledby="win-h">
-    <h2 id="win-h">Windows</h2>
+  <section class="card" id="latest" aria-labelledby="latest-h">
+    <h2 id="latest-h">Latest version</h2>
     <div id="state" data-state="loading" aria-live="polite">
       <p id="msg-loading" class="muted">Checking the latest version…</p>
       <p id="msg-none" hidden>No version has been published yet.</p>
       <p id="msg-error" hidden>Could not load the latest version from GitHub (it may be busy or limiting requests). <span id="error-link"></span></p>
       <div id="loaded" hidden>
         <p class="meta">Version <strong id="version"></strong> · <span id="date"></span></p>
-        <div class="btns" id="btns"></div>
-        <ul id="file-list"></ul>
-        <p id="msg-pending" class="muted" hidden>The Windows files are still being built. Try again in a few minutes.</p>
+        <p id="msg-pending" class="muted" hidden>The files are still being built. Try again in a few minutes.</p>
       </div>
     </div>
+  </section>
+
+  <div class="tabs" role="tablist" aria-label="Choose your system">
+    <button type="button" class="tab" role="tab" id="tab-windows" aria-controls="windows" aria-selected="true" tabindex="0">Windows</button>
+    <button type="button" class="tab" role="tab" id="tab-mac" aria-controls="mac" aria-selected="false" tabindex="-1">Mac</button>
+    <button type="button" class="tab" role="tab" id="tab-android" aria-controls="android-card" aria-selected="false" tabindex="-1">Android</button>
+  </div>
+
+  <section class="card" id="windows" role="tabpanel" aria-labelledby="tab-windows">
+    <h2>Windows</h2>
+    <p id="win-empty" class="muted" hidden>No Windows files in this version yet.</p>
+    <div class="btns" id="btns"></div>
+    <ul id="file-list"></ul>
     <div class="note">
       <p><strong>Windows may say "unknown publisher".</strong> The program is not signed with a paid certificate yet, so Windows warns about every new program like this.</p>
       <p>Click <b>More info</b>, then <b>Run anyway</b>. Use the installer for a normal install, or the portable file to run it from any folder without installing.</p>
@@ -78,7 +94,24 @@ footer{color:var(--muted);font-size:.9rem}
     </div>
   </section>
 
-  <section class="card" id="android-card" aria-labelledby="and-h">
+  <section class="card" id="mac" role="tabpanel" aria-labelledby="tab-mac" hidden>
+    <h2>Mac</h2>
+    <p><b>Which file do I need?</b> Open the Apple menu, then <b>About This Mac</b>. If it says "Chip: Apple M…", choose <b>Apple Silicon</b>. If it says "Processor: Intel…", choose <b>Intel</b>.</p>
+    <p id="mac-empty" class="muted" hidden>No Mac files in this version yet.</p>
+    <div class="btns" id="mac-btns"></div>
+    <ul id="mac-list"></ul>
+    <p class="muted">The .dmg and the .zip hold the same app. Use either one, then drag Study Desk into Applications.</p>
+    <div class="note">
+      <p><strong>The Mac app is not signed by Apple.</strong> macOS blocks it the first time, and you allow it once:</p>
+      <ul class="steps">
+        <li>macOS 15 or newer: open Study Desk, press <b>Done</b> on the warning, then go to System Settings, Privacy &amp; Security, scroll down and press <b>Open Anyway</b>.</li>
+        <li>macOS 14 or older: right-click (or Control-click) Study Desk, choose <b>Open</b>, then <b>Open</b>.</li>
+        <li>If it says the app is "damaged", run <span class="meta">xattr -cr "/Applications/Study Desk.app"</span> once in Terminal and try again.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="android-card" role="tabpanel" aria-labelledby="tab-android" hidden>
     <h2 id="and-h">Android</h2>
     <p id="android-text">Android: coming soon on Google Play</p>
     <p class="muted">When it is published, install it from Google Play like any other app.</p>
@@ -142,17 +175,17 @@ footer{color:var(--muted);font-size:.9rem}
     return null;
   }
 
-  function button(id, label, file, alt) {
+  function button(btnsId, listId, id, label, file, alt) {
     const a = document.createElement('a');
     a.id = id;
     a.className = 'btn' + (alt ? ' alt' : '');
     a.href = file.url;
     a.rel = 'noopener';
     a.textContent = label;
-    $('btns').appendChild(a);
+    $(btnsId).appendChild(a);
     const li = document.createElement('li');
     li.textContent = file.name + (file.size ? ' · ' + file.size : '');
-    $('file-list').appendChild(li);
+    $(listId).appendChild(li);
   }
 
   function showLoaded(rel, repo) {
@@ -162,9 +195,23 @@ footer{color:var(--muted);font-size:.9rem}
     $('date').textContent = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     const installer = pick(rel.assets, /^Study-Desk-Setup-.+\.exe$/, repo);
     const portable = pick(rel.assets, /^Study-Desk-.+-portable\.exe$/, repo);
-    if (installer) button('btn-installer', 'Download the installer', installer, false);
-    if (portable) button('btn-portable', 'Download the portable version', portable, true);
-    $('msg-pending').hidden = !!(installer || portable);
+    if (installer) button('btns', 'file-list', 'btn-installer', 'Download the installer', installer, false);
+    if (portable) button('btns', 'file-list', 'btn-portable', 'Download the portable version', portable, true);
+    const mac = [
+      ['btn-mac-arm64', 'Apple Silicon (.dmg)', /^Study-Desk-.+-mac-arm64\.dmg$/, false],
+      ['btn-mac-arm64-zip', 'Apple Silicon (.zip)', /^Study-Desk-.+-mac-arm64\.zip$/, true],
+      ['btn-mac-x64', 'Intel (.dmg)', /^Study-Desk-.+-mac-x64\.dmg$/, false],
+      ['btn-mac-x64-zip', 'Intel (.zip)', /^Study-Desk-.+-mac-x64\.zip$/, true],
+    ];
+    let macCount = 0;
+    for (const m of mac) {
+      const f = pick(rel.assets, m[2], repo);
+      if (f) { button('mac-btns', 'mac-list', m[0], 'Download for ' + m[1], f, m[3]); macCount++; }
+    }
+    const winCount = (installer ? 1 : 0) + (portable ? 1 : 0);
+    $('win-empty').hidden = winCount > 0;
+    $('mac-empty').hidden = macCount > 0;
+    $('msg-pending').hidden = winCount + macCount > 0;
     setState('loaded');
   }
 
@@ -214,6 +261,42 @@ footer{color:var(--muted);font-size:.9rem}
     $('android-card').insertBefore(box, $('android-card').children[2]);
   }
 
+  const TABS = ['windows', 'mac', 'android'];
+  const PANELS = { windows: 'windows', mac: 'mac', android: 'android-card' };
+
+  function selectTab(name, focus) {
+    for (const t of TABS) {
+      const tab = $('tab-' + t);
+      const on = t === name;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      $(PANELS[t]).hidden = !on;
+      if (on && focus) tab.focus();
+    }
+  }
+
+  function initTabs() {
+    const ua = String(navigator.userAgent || '');
+    let first = 'windows';
+    if (/Android/i.test(ua)) first = 'android';
+    else if (/Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad|iPod/i.test(ua)) first = 'mac';
+    selectTab(first, false);
+    for (const t of TABS) $('tab-' + t).addEventListener('click', () => selectTab(t, false));
+    $('tab-windows').parentNode.addEventListener('keydown', e => {
+      const i = TABS.findIndex(t => $('tab-' + t) === document.activeElement);
+      if (i < 0) return;
+      let n = -1;
+      if (e.key === 'ArrowRight') n = (i + 1) % TABS.length;
+      else if (e.key === 'ArrowLeft') n = (i + TABS.length - 1) % TABS.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = TABS.length - 1;
+      if (n < 0) return;
+      e.preventDefault();
+      selectTab(TABS[n], true);
+    });
+  }
+
+  initTabs();
   androidCard();
   load();
 })();
