@@ -1300,8 +1300,9 @@ function aiCheckLesson(raw,needQuiz){
   var kp=(Array.isArray(raw.keyPoints)?raw.keyPoints:[]).slice(0,10).map(function(k){ return aiStr(k,300); }).filter(Boolean);
   var quiz=[];
   if(needQuiz){
-    if(!Array.isArray(raw.quiz)||raw.quiz.length!==4) return null;
-    for(var j=0;j<4;j++){ var q=aiCheckQuestion(raw.quiz[j]); if(!q) return null; quiz.push(q); }
+    /* four questions are asked for; a small model sometimes writes three, and a quiz of two to four is still worth showing */
+    if(!Array.isArray(raw.quiz)||raw.quiz.length<2||raw.quiz.length>4) return null;
+    for(var j=0;j<raw.quiz.length;j++){ var q=aiCheckQuestion(raw.quiz[j]); if(!q) return null; quiz.push(q); }
   }
   return {sections:sections,keyPoints:kp,example:aiStr(raw.example,2000),quiz:quiz};
 }
@@ -1876,7 +1877,7 @@ function aiCurrent(){ var l=aiCoursesLoad(); for(var i=0;i<l.length;i++) if(l[i]
 function aiLessonOpen(c,i){ return i===0||(c.lessons[i-1]&&c.lessons[i-1].quizBest!=null); }
 function aiCourseHtml(c){
   var pr=aiProgress(c), rows=c.outline.lessons.map(function(l,i){
-    var ls=c.lessons[i], open=aiLessonOpen(c,i), state=ls&&ls.quizBest!=null?'Quiz '+ls.quizBest+'/4':(open?(ls?'In progress':'Ready'):'Locked');
+    var ls=c.lessons[i], open=aiLessonOpen(c,i), state=ls&&ls.quizBest!=null?'Quiz '+ls.quizBest+'/'+((ls.quiz&&ls.quiz.length)||4):(open?(ls?'In progress':'Ready'):'Locked');
     return '<li class="ai-lesson-row"><span class="ai-num">'+(i+1)+'</span><div><strong>'+esc(l.title)+'</strong><span class="sub">'+esc(l.goal)+'</span></div><span class="ai-state">'+esc(state)+'</span>'
       +'<button class="btn small'+(open?' primary':'')+'" type="button" data-act="ai-lesson" data-i="'+i+'"'+(open&&!ai.busy?'':' disabled')+'>'+(ls?'Open':'Start')+'</button></li>';
   }).join('');
@@ -1928,7 +1929,7 @@ function aiQuizHtml(ls){
     }).join('');
     return '<li class="ai-q"><p><strong>'+(j+1)+'. '+esc(Q.q)+'</strong></p>'+(done?'<ul class="ai-opts">'+opts+'</ul><p class="ai-expl">'+esc(Q.explanation)+'</p>':'<div class="ai-opts">'+opts+'</div>')+'</li>';
   }).join('');
-  if(done) return '<div id="ai-quiz-result"><h4>Check yourself: '+q.score+'/4</h4><ol class="ai-qs">'+items+'</ol><div class="actions"><button class="btn" type="button" data-act="ai-quiz-retry">Try the quiz again</button></div></div>';
+  if(done) return '<div id="ai-quiz-result"><h4>Check yourself: '+q.score+'/'+ls.quiz.length+'</h4><ol class="ai-qs">'+items+'</ol><div class="actions"><button class="btn" type="button" data-act="ai-quiz-retry">Try the quiz again</button></div></div>';
   return '<form id="ai-quiz-form" novalidate><h4>Check yourself</h4><ol class="ai-qs">'+items+'</ol><div class="err" id="ai-quiz-err" role="alert"></div><div class="actions"><button class="btn primary" id="ai-quiz-submit" type="submit">Check answers</button></div></form>';
 }
 function aiChatHtml(){
@@ -1961,7 +1962,7 @@ function aiAsk(){
 }
 function aiSubmitQuiz(){
   var c=aiCurrent(), ls=c&&c.lessons[ai.lessonIdx]; if(!ls) return;
-  if(ai.quiz.sel.some(function(v){ return v==null; })){ $('#ai-quiz-err').textContent='Answer every question first.'; return; }
+  if(ls.quiz.some(function(Q,j){ return ai.quiz.sel[j]==null; })){ $('#ai-quiz-err').textContent='Answer every question first.'; return; }
   var g=aiGrade(ls.quiz,ai.quiz.sel); ai.quiz.done=true; ai.quiz.score=g.score;
   ls.quizBest=Math.max(ls.quizBest==null?0:ls.quizBest,g.score);
   if(!aiSaveCourse(c)) ai.err='Could not save your score. Browser storage may be blocked or full.';

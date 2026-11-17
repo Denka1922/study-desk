@@ -415,12 +415,29 @@ test('tagged replies: a reply with the wrong shape is retried once, then reporte
   await goTutor(page); await page.waitForSelector('#ai-new');
   await page.fill('#ai-topic', 'Geometry'); await page.selectOption('#ai-count', '3'); await page.click('#ai-create'); await page.waitForSelector('#ai-course');
   assert.strictEqual(await page.evaluate(() => window.__n), 1, 'JSON accepted at the first try');
-  // 2) a lesson that is cut off (only 2 quiz blocks): asked twice, then an error and the screen stays usable
-  await page.evaluate(() => { window.__n = 0; window.__chatText = req => { window.__n++; return '## Part\nBody\nKEY: k\nEXAMPLE: e\nQ: a?\nA) 1\nB) 2\nC) 3\nD) 4\nANSWER: A\nWHY: w\nQ: b?\nA) 1\nB) 2\nC) 3\nD) 4\nANSWER: B\nWHY: w'; }; });
+  // 2) a lesson that is cut off (only 1 quiz block; two to four are accepted): asked twice, then an error and the screen stays usable
+  await page.evaluate(() => { window.__n = 0; window.__chatText = req => { window.__n++; return '## Part\nBody\nKEY: k\nEXAMPLE: e\nQ: a?\nA) 1\nB) 2\nC) 3\nD) 4\nANSWER: A\nWHY: w'; }; });
   await page.click('[data-act="ai-lesson"][data-i="0"]');
   await page.waitForFunction(() => window.__n >= 2);
   await page.waitForFunction(() => /could not use/i.test(document.body.innerText));
   assert.strictEqual(await page.evaluate(() => window.__n), 2, 'one retry, no more');
   assert.strictEqual(await page.locator('#ai-lesson').count(), 0, 'no half-built lesson is shown');
+  assert.deepStrictEqual(errors, []); await ctx.close();
+});
+
+test('a lesson with only three quiz questions can be answered, submitted and graded out of 3', async () => {
+  const { ctx, page, errors } = await open({ pre: `try{sessionStorage.setItem('sd-ai-key','KEY-UI-TEST-1234567890')}catch(e){}` });
+  const three = '## Part\nBody text.\nKEY: k\nEXAMPLE: e\n' + [0, 1, 2].map(j => qT('Q' + j, j, 'Because ' + j)).join('\n');
+  await page.evaluate(([o, l]) => { window.__chatText = req => /Write lesson/.test(req.system) ? l : o; }, [outlineT(3), three]);
+  await setSettings(page, { source: 'local', localModel: 'nemotron-3-nano-4b' });
+  await goTutor(page); await page.waitForSelector('#ai-new');
+  await page.fill('#ai-topic', 'Geometry'); await page.selectOption('#ai-count', '3'); await page.click('#ai-create'); await page.waitForSelector('#ai-course');
+  await page.click('[data-act="ai-lesson"][data-i="0"]'); await page.waitForSelector('#ai-lesson');
+  assert.strictEqual(await page.locator('#ai-quiz-form input[type="radio"]').count(), 12, '3 questions with 4 options');
+  for (let j = 0; j < 3; j++) await page.check('#ai-quiz-form input[name="q' + j + '"][value="' + j + '"]');
+  await page.click('#ai-quiz-submit'); await page.waitForSelector('#ai-quiz-result');
+  assert.match(await text(page, '#ai-quiz-result'), /3\s*\/\s*3/);
+  await page.click('[data-act="ai-course"]'); await page.waitForSelector('#ai-course');
+  assert.match(await text(page, '#ai-course'), /Quiz 3\/3/);
   assert.deepStrictEqual(errors, []); await ctx.close();
 });

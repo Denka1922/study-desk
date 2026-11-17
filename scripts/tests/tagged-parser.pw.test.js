@@ -100,3 +100,17 @@ test('answers that are already spread out are left exactly as the AI wrote them'
   assert.deepStrictEqual(r, [0, 2, 1, 3]);
   await p.close();
 });
+
+test('a lesson whose model wrote only three quiz questions is still shown (Nemotron 3 Nano 4B did this in a real run)', async () => {
+  const p = await page();
+  const r = await p.evaluate(() => {
+    const q = n => 'Q: Question ' + n + '?\nA) a\nB) b\nC) c\nD) d\nANSWER: C\nWHY: because ' + n + '.\n';
+    const body = '## Heading\nSome text.\nKEY: one\nEXAMPLE: e\n';
+    const three = aiParseTagged('lesson', body + q(1) + q(2) + q(3), {});
+    const one = aiParseTagged('lesson', body + q(1), {});
+    const none = aiParseTagged('lesson', body, {});
+    return { three: !!aiValidate('lesson', three, {}), n3: three.quiz.length, one: !!aiValidate('lesson', one, {}), none: !!aiValidate('lesson', none, {}) };
+  });
+  assert.deepStrictEqual(r, { three: true, n3: 3, one: false, none: false });
+  await p.close();
+});
