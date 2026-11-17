@@ -84,7 +84,9 @@ Automatic tests cover the page, settings, link rules, version handling, the down
 - starting the Windows program, the installer and the portable file;
 - the Mac app (built on Linux, never run on a Mac);
 - building the Android project and running it on a phone;
-- the Local and CLI AI on a real Windows PC or Mac. Tests use fakes: no real model download, graphics card or signed-in command-line tool.
+- the Local and CLI AI on a real Windows PC or Mac. The automatic tests use fakes: no real model download, graphics card or signed-in command-line tool.
+
+**Tested with real models (on a Linux computer at GitHub, processor only):** the real Tutor prompts and the real llama.cpp engine were run with Nemotron 3 Nano 4B, Nemotron 3.5 Bolt, Qwen3 4B, Qwen3 8B and GLM-4-9B. They wrote valid outlines, lessons, exams and revisions. These runs found and fixed three real problems (a 5 minute wait limit on slow computers, a model writing too many lessons, and a model writing each question on one line). **Not run for real:** Nemotron 3.5 Lightning, Nemotron 3 Nano 30B, GLM-4.7-Flash and Nemotron Nano 9B v2 (too big or too slow for that computer), and any model on Windows or Mac.
 
 Use [TEST-CHECKLIST.md](TEST-CHECKLIST.md) to check these, and please open an issue if something fails.
 

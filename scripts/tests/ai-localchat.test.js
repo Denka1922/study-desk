@@ -46,6 +46,9 @@ test('the request has the right address, key, message order, max_tokens and JSON
     assert.deepStrictEqual(seen.body.response_format, { type: 'json_object' });
     const plain = JSON.parse((await ask(port, 'SCENARIO:echo-request x')).text);
     assert.strictEqual(plain.body.response_format, undefined);
+    // a lesson does not need the model to think first; with thinking on, a 4B model used its whole answer budget thinking in Turkish and sent nothing
+    assert.deepStrictEqual(seen.body.chat_template_kwargs, { enable_thinking: false });
+    assert.deepStrictEqual(plain.body.chat_template_kwargs, { enable_thinking: false });
   });
 });
 

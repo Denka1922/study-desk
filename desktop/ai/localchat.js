@@ -51,6 +51,7 @@ async function chatLocal(o) {
   const fetchImpl = o.fetchImpl || localFetch;
   const messages = [{ role: 'system', content: o.system }].concat(o.messages.map(m => ({ role: m.role, content: m.text })));
   const body = { model: 'local', messages, max_tokens: o.maxTokens, stream: false };
+  body.chat_template_kwargs = { enable_thinking: false }; // answer at once: thinking first can eat the whole answer budget and uses far more tokens
   if (o.json) body.response_format = { type: 'json_object' };
 
   const ac = new AbortController();
