@@ -114,3 +114,14 @@ test('a lesson whose model wrote only three quiz questions is still shown (Nemot
   assert.deepStrictEqual(r, { three: true, n3: 3, one: false, none: false });
   await p.close();
 });
+
+test('an exam of six to fifteen questions is accepted (Nemotron 3 Nano 4B wrote nine), fewer than six is not', async () => {
+  const p = await page();
+  const r = await p.evaluate(() => {
+    const mk = n => Array.from({ length: n }, (_, i) => 'Q: Q' + i + '?\nA) a\nB) b\nC) c\nD) d\nANSWER: B\nWHY: w\nLESSON: ' + (1 + i % 3)).join('\n');
+    const ok = n => !!aiValidate('exam', aiParseTagged('exam', mk(n), {}), { outline: { lessons: [{ title: 'a' }, { title: 'b' }, { title: 'c' }] } });
+    return { n5: ok(5), n6: ok(6), n9: ok(9), n15: ok(15), n16: ok(16) };
+  });
+  assert.deepStrictEqual(r, { n5: false, n6: true, n9: true, n15: true, n16: false });
+  await p.close();
+});

@@ -1308,7 +1308,7 @@ function aiCheckLesson(raw,needQuiz){
 }
 function aiCheckExam(raw,lessonCount){
   if(!raw||typeof raw!=='object'||!Array.isArray(raw.questions)) return null;
-  var n=raw.questions.length; if(n<10||n>15) return null;
+  var n=raw.questions.length; if(n<6||n>15) return null; /* twelve are asked for; a small model sometimes writes nine, which is still a fair exam */
   var out=[];
   for(var i=0;i<n;i++){
     var src=raw.questions[i], q=aiCheckQuestion(src);
