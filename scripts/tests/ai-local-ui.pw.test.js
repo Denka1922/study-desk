@@ -401,6 +401,8 @@ test('tagged replies: the page draws boxes, formula, steps and the quiz from pla
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); assert.ok(overflow <= 0, 'no sideways scrolling: ' + overflow);
   const reqs = await page.evaluate(() => window.__reqs.filter(r => !/Answer the student/.test(r.system)));
   assert.ok(reqs.length >= 2 && reqs.every(r => r.json === false && /plain lines only/i.test(r.system)), 'the page asks for tagged lines (json:false): ' + JSON.stringify(reqs.map(r => r.json)));
+  const lessonReq = reqs.find(r => /KEY:/.test(r.system) && /FORMULA:/.test(r.system));
+  assert.ok(lessonReq && /at most (three|3)/i.test(lessonReq.system) && /never one in every section/i.test(lessonReq.system), 'the lesson prompt keeps tip, note and warning boxes rare (real models put one in every section)');
   assert.strictEqual(reqs.length, 2, 'outline and lesson were each asked for once (no retry needed)');
   assert.deepStrictEqual(errors, []); await ctx.close();
 });
