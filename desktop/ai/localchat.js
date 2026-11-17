@@ -1,5 +1,6 @@
 'use strict';
 // Talks to the local llama-server (OpenAI-style chat endpoint on 127.0.0.1).
+const http = require('node:http');
 const { estimateTokens } = require('./usage');
 
 class ChatError extends Error {
@@ -22,8 +23,32 @@ function unfence(s) {
   return m ? m[1].trim() : s;
 }
 
+// Plain http request to the engine on this computer. The built-in fetch gives up after 5 minutes without a first byte,
+// but the engine sends nothing until the whole answer is ready, and a slow processor can need longer than that.
+// Only the app's own limit (timeoutMs) applies. Returns the small part of a fetch Response that chatLocal uses.
+function localFetch(url, init) {
+  return new Promise((resolve, reject) => {
+    const signal = init.signal;
+    if (signal && signal.aborted) { const e = new Error('aborted'); e.name = 'AbortError'; reject(e); return; }
+    const headers = Object.assign({}, init.headers);
+    if (init.body != null) headers['content-length'] = Buffer.byteLength(init.body); // a plain length, never chunked
+    const req = http.request(url, { method: init.method || 'GET', headers, agent: false }, res => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('error', reject);
+      res.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8');
+        resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, text: async () => text, json: async () => JSON.parse(text) });
+      });
+    });
+    if (signal) signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; req.destroy(e); reject(e); }, { once: true });
+    req.on('error', reject);
+    req.end(init.body);
+  });
+}
+
 async function chatLocal(o) {
-  const fetchImpl = o.fetchImpl || fetch;
+  const fetchImpl = o.fetchImpl || localFetch;
   const messages = [{ role: 'system', content: o.system }].concat(o.messages.map(m => ({ role: m.role, content: m.text })));
   const body = { model: 'local', messages, max_tokens: o.maxTokens, stream: false };
   if (o.json) body.response_format = { type: 'json_object' };

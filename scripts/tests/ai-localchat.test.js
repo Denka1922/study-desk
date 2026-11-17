@@ -110,3 +110,23 @@ test('a 50,000 character prompt with quotes and newlines arrives unchanged', asy
     assert.strictEqual(seen.body.messages[1].content, nasty);
   });
 });
+
+test('the real request does not use the built-in fetch, which gives up after 5 minutes of silence (a slow PC can need longer)', async () => {
+  // Found in a real run: Qwen3 8B on a slow processor needed more than 5 minutes for a Turkish lesson and the app said
+  // "Could not reach the local AI" although the model was still working. The app's own 15 minute limit must be the only one.
+  await withServer(async port => {
+    const real = globalThis.fetch;
+    globalThis.fetch = () => { throw new Error('global fetch must not be used for the local AI'); };
+    try {
+      const r = await ask(port, 'hello');
+      assert.ok(r.text.length > 0 && r.usage.output > 0);
+      const ac = new AbortController(); const p = ask(port, 'SCENARIO:hang', { signal: ac.signal });
+      setTimeout(() => ac.abort(), 100);
+      assert.strictEqual((await err(p)).kind, 'cancelled');
+      assert.strictEqual((await err(ask(port, 'SCENARIO:hang', { timeoutMs: 300 }))).kind, 'timeout');
+      assert.strictEqual((await err(chatLocal({ port, token: 'wrong', system: 's', messages: [{ role: 'user', text: 'x' }], maxTokens: 5, json: false }))).kind, 'bad');
+    } finally { globalThis.fetch = real; }
+  });
+  const dead = await freePort();
+  assert.strictEqual((await err(ask(dead, 'x'))).kind, 'network');
+});
