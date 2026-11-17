@@ -1338,6 +1338,16 @@ function aiSplitInlineQuestions(lines){
   });
   return out;
 }
+/* Small models put the right answer in the same slot (B, B, B, B). When one slot holds more than half of the
+   questions, move each right answer to a different slot in a fixed order (B, D, A, C ...). Nothing is lost: the two options swap places. */
+function aiSpreadAnswers(list){
+  var n=list.length, counts={}, max=0, j, q, t;
+  if(n<3) return list;
+  for(j=0;j<n;j++){ q=list[j]; if(!q.options||q.options.length!==4) return list; counts[q.answer]=(counts[q.answer]||0)+1; if(counts[q.answer]>max) max=counts[q.answer]; }
+  if(max*2<=n) return list;
+  for(j=0;j<n;j++){ q=list[j]; t=[1,3,0,2][j%4]; if(q.answer!==t){ var o=q.options.slice(), keep=o[q.answer]; o[q.answer]=o[t]; o[t]=keep; q.options=o; q.answer=t; } }
+  return list;
+}
 function aiUnbold(x){ return String(x).replace(/\*\*|__/g,'').trim(); }
 function aiParseTagged(kind,text,p){
   if(typeof text!=='string'||!/^(outline|lesson|revision|exam)$/.test(kind)) return null;
@@ -1399,12 +1409,12 @@ function aiParseTagged(kind,text,p){
     if(secs.length) secs[secs.length-1].lines.push(ln.replace(/\s+$/,''));
   }
   if(!seen) return null;
-  if(kind==='exam') return quiz.length?{questions:quiz.map(function(q){ return {q:q.q,options:q.options,answer:q.answer,explanation:q.explanation,lesson:q.lesson}; })}:null;
+  if(kind==='exam') return quiz.length?{questions:aiSpreadAnswers(quiz.map(function(q){ return {q:q.q,options:q.options,answer:q.answer,explanation:q.explanation,lesson:q.lesson}; }))}:null;
   return {
     sections:secs.map(function(s){ return {heading:s.heading,body:aiJoinLines(s.lines)}; }),
     keyPoints:key,
     example:example?aiJoinLines(example):'',
-    quiz:kind==='lesson'?quiz.slice(0,4).map(function(q){ return {q:q.q,options:q.options,answer:q.answer,explanation:q.explanation}; }):[]
+    quiz:kind==='lesson'?aiSpreadAnswers(quiz.slice(0,4).map(function(q){ return {q:q.q,options:q.options,answer:q.answer,explanation:q.explanation}; })):[]
   };
 }
 function aiGrade(questions,answers){

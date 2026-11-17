@@ -68,3 +68,35 @@ test('a lesson quiz on one line works too, and a normal multi-line quiz is not c
   assert.deepStrictEqual(r.b, ['Which is right?', ['one', 'two', 'three', 'four'], 2]);
   await p.close();
 });
+
+// Real small models put the right answer in the same slot almost every time (B, B, B, B), so a student learns to just tap B.
+test('when one answer position holds most of the questions, the page moves the right answers around', async () => {
+  const p = await page();
+  const r = await p.evaluate(() => {
+    const q = n => 'Q: Question ' + n + '?\nA) a' + n + '\nB) b' + n + '\nC) c' + n + '\nD) d' + n + '\nANSWER: B\nWHY: w' + n;
+    const lesson = '## H\nbody\nKEY: k\nEXAMPLE: e\n' + [1, 2, 3, 4].map(q).join('\n');
+    const o = aiParseTagged('lesson', lesson, {});
+    const exam = aiParseTagged('exam', [1, 2, 3, 4, 5, 6, 7, 8].map(n => q(n) + '\nLESSON: 1').join('\n'), {});
+    const right = x => x.options[x.answer];
+    return {
+      lessonAnswers: o.quiz.map(x => x.answer), lessonStill: o.quiz.every((x, i) => right(x) === 'b' + (i + 1)),
+      examAnswers: exam.questions.map(x => x.answer), examStill: exam.questions.every((x, i) => right(x) === 'b' + (i + 1)),
+      sorted: o.quiz.every(x => x.options.slice().sort().join() === ['a', 'b', 'c', 'd'].map(l => l + (o.quiz.indexOf(x) + 1)).join()),
+    };
+  });
+  assert.deepStrictEqual(r.lessonAnswers, [1, 3, 0, 2]);
+  assert.strictEqual(r.lessonStill, true, 'every right answer still points at its own right option');
+  assert.strictEqual(r.sorted, true, 'no option was lost');
+  assert.ok(new Set(r.examAnswers).size === 4 && r.examStill);
+  await p.close();
+});
+
+test('answers that are already spread out are left exactly as the AI wrote them', async () => {
+  const p = await page();
+  const r = await p.evaluate(() => {
+    const q = (n, a) => 'Q: Question ' + n + '?\nA) a\nB) b\nC) c\nD) d\nANSWER: ' + a + '\nWHY: w';
+    return aiParseTagged('lesson', '## H\nbody\nKEY: k\nEXAMPLE: e\n' + [q(1, 'A'), q(2, 'C'), q(3, 'B'), q(4, 'D')].join('\n'), {}).quiz.map(x => x.answer);
+  });
+  assert.deepStrictEqual(r, [0, 2, 1, 3]);
+  await p.close();
+});
