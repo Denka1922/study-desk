@@ -144,6 +144,31 @@ test('Local screen: another model can be chosen; one that is too big is refused 
   assert.deepStrictEqual(errors, []); await ctx.close();
 });
 
+test('Local screen: models that no normal computer can run are listed apart, cannot be clicked, and say what they need', async () => {
+  const { ctx, page, errors } = await open();
+  await goTutor(page); await page.waitForSelector('#ai-local-models');
+  // the scripted bridge answers with two normal models plus two list-only ones
+  await page.evaluate(() => {
+    var big = function (id, name, params, needs) { return { id: id, name: name, params: params, sizeBytes: null, line: 'A huge model.', tier: 6, fit: 'strong', fits: false, tooBig: true, needs: needs }; };
+    var old = window.studyDesk.ai.recommend;
+    window.studyDesk.ai.recommend = function (a) { return old(a).then(function (r) { r.models = r.models.concat([
+      big('nemotron-3-super-120b-a12b', 'NVIDIA Nemotron 3 Super 120B', '120B', 'A workstation with about 96 GB of memory.'),
+      big('nemotron-3-ultra-550b-a55b', 'NVIDIA Nemotron 3 Ultra 550B', '550B', 'A server with several hundred GB of memory.')]); return r; }); };
+  });
+  await page.click('[data-act="ai-level"][data-level="max"]');
+  await page.waitForSelector('#ai-local-toobig');
+  const clickable = await page.locator('#ai-local-models [data-act="ai-local-model"]').count();
+  assert.strictEqual(clickable, 2, 'only the two normal models can be clicked');
+  const box = await text(page, '#ai-local-toobig');
+  assert.match(box, /Too big for normal computers/i);
+  assert.match(box, /Nemotron 3 Ultra 550B/); assert.match(box, /several hundred GB/);
+  assert.match(box, /Nemotron 3 Super 120B/); assert.match(box, /96 GB/);
+  assert.ok(!/0 GB|NaN|null/.test(box), 'no made-up download size: ' + box);
+  assert.strictEqual(await page.locator('#ai-local-toobig button, #ai-local-toobig [data-act]').count(), 0, 'nothing in the too-big list can be pressed');
+  assert.match(await text(page, '#ai-local-model'), /Nano 9B/, 'the recommended model is unchanged');
+  assert.deepStrictEqual(errors, []); await ctx.close();
+});
+
 test('Local screen: a chosen model that no longer fits offers the recommended smaller one', async () => {
   const { ctx, page } = await open({ pre: "try{localStorage.setItem('sd-test-seed','1')}catch(e){}" });
   await page.evaluate(() => { window.__fb.installed = ['nemotron-nano-9b-v2']; aiSettingsSet({ source: 'local', level: 'medium', localModel: 'nemotron-nano-9b-v2' }); });
@@ -343,4 +368,57 @@ test('review: the CLI screen does not claim the tool cannot see your files', asy
   assert.doesNotMatch(t, /cannot see or change your files/i);
   assert.match(t, /read-only/i); assert.match(t, /(can still|may still) read/i); assert.match(t, /password|secret/i);
   await ctx.close();
+});
+
+// ---- the AI writes tagged lines; the page builds the layout ----
+const qT = (q, a, w, lesson) => 'Q: ' + q + '\n' + [0, 1, 2, 3].map(k => 'ABCD'[k] + ') ' + q + '-opt' + k).join('\n') + '\nANSWER: ' + 'ABCD'[a] + '\nWHY: ' + w + (lesson ? '\nLESSON: ' + lesson : '');
+const outlineT = n => 'TITLE: Geometry Basics\nSUMMARY: A short course.\n' + Array.from({ length: n }, (_, i) => 'LESSON: Lesson ' + (i + 1) + ' | Goal ' + (i + 1)).join('\n');
+const lessonT = i => '## Right triangles ' + i + '\nA right triangle has one square corner.\nTIP: Draw it first.\nWARN: It only works for right triangles.\nFORMULA: a² + b² = c²\nSTEP: Square the short sides\nSTEP: Add them\nSTEP: Take the root\nKEY: The long side is the hypotenuse\nEXAMPLE: A 3-4-5 triangle\n9 + 16 = 25\nSTEP: Root of 25 is 5\n' + [0, 1, 2, 3].map(j => qT('Q' + j, j, 'Because ' + j)).join('\n');
+const examT = n => Array.from({ length: n }, (_, i) => qT('EQ' + i, i % 4, 'Exp ' + i, 1 + i % 3)).join('\n');
+
+test('tagged replies: the page draws boxes, formula, steps and the quiz from plain lines, and asks for lines, not JSON', async () => {
+  const { ctx, page, errors } = await open({ pre: `try{sessionStorage.setItem('sd-ai-key','KEY-UI-TEST-1234567890')}catch(e){}` });
+  await page.evaluate(([o, l, e]) => { window.__reqs = []; window.__chatText = req => { window.__reqs.push({ json: req.json, system: req.system }); const s = req.system;
+    if (/Answer the student/.test(s)) return 'The answer is 42.';
+    if (/Write a final exam/.test(s)) return e;
+    const m = /Write lesson (\d+) of/.exec(s); if (m) return l.replace(/__I__/g, m[1]);
+    return o; }; }, [outlineT(3), lessonT('__I__'), examT(12)]);
+  await setSettings(page, { source: 'local', localModel: 'nemotron-3-nano-4b' });
+  await goTutor(page); await page.waitForSelector('#ai-new');
+  await page.fill('#ai-topic', 'Geometry'); await page.selectOption('#ai-count', '3'); await page.click('#ai-create'); await page.waitForSelector('#ai-course');
+  assert.match(await text(page, '#ai-course'), /Geometry Basics/); assert.match(await text(page, '#ai-course'), /Lesson 3/);
+  await page.click('[data-act="ai-lesson"][data-i="0"]'); await page.waitForSelector('#ai-lesson');
+  assert.strictEqual(await page.locator('#ai-lesson .ai-b-tip').count(), 1, 'tip box');
+  assert.strictEqual(await page.locator('#ai-lesson .ai-b-warn').count(), 1, 'warning box');
+  assert.strictEqual((await text(page, '#ai-lesson .ai-formula')).trim(), 'a² + b² = c²');
+  assert.deepStrictEqual(await page.locator('#ai-lesson ol.ai-steps').first().locator('li').allInnerTexts(), ['Square the short sides', 'Add them', 'Take the root']);
+  assert.match(await text(page, '#ai-lesson .ai-example'), /3-4-5 triangle/); assert.strictEqual(await page.locator('#ai-lesson .ai-example ol.ai-steps li').count(), 1, 'a step inside the worked example');
+  assert.match(await text(page, '#ai-lesson'), /hypotenuse/);
+  assert.strictEqual(await page.locator('#ai-quiz-form input[type="radio"]').count(), 16, '4 questions with 4 options');
+  for (let j = 0; j < 4; j++) await page.check('#ai-quiz-form input[name="q' + j + '"][value="' + j + '"]');
+  await page.click('#ai-quiz-submit'); await page.waitForSelector('#ai-quiz-result');
+  assert.match(await text(page, '#ai-quiz-result'), /4\s*\/\s*4/, 'the letters in ANSWER lines were graded as the right options');
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); assert.ok(overflow <= 0, 'no sideways scrolling: ' + overflow);
+  const reqs = await page.evaluate(() => window.__reqs.filter(r => !/Answer the student/.test(r.system)));
+  assert.ok(reqs.length >= 2 && reqs.every(r => r.json === false && /plain lines only/i.test(r.system)), 'the page asks for tagged lines (json:false): ' + JSON.stringify(reqs.map(r => r.json)));
+  assert.strictEqual(reqs.length, 2, 'outline and lesson were each asked for once (no retry needed)');
+  assert.deepStrictEqual(errors, []); await ctx.close();
+});
+
+test('tagged replies: a reply with the wrong shape is retried once, then reported; a JSON reply still works', async () => {
+  const { ctx, page, errors } = await open({ pre: `try{sessionStorage.setItem('sd-ai-key','KEY-UI-TEST-1234567890')}catch(e){}` });
+  // 1) outline answered in JSON (the older habit of some models): accepted without a retry
+  await page.evaluate(o => { window.__n = 0; window.__chatText = req => { window.__n++; return o; }; }, outline(3));
+  await setSettings(page, { source: 'local', localModel: 'nemotron-3-nano-4b' });
+  await goTutor(page); await page.waitForSelector('#ai-new');
+  await page.fill('#ai-topic', 'Geometry'); await page.selectOption('#ai-count', '3'); await page.click('#ai-create'); await page.waitForSelector('#ai-course');
+  assert.strictEqual(await page.evaluate(() => window.__n), 1, 'JSON accepted at the first try');
+  // 2) a lesson that is cut off (only 2 quiz blocks): asked twice, then an error and the screen stays usable
+  await page.evaluate(() => { window.__n = 0; window.__chatText = req => { window.__n++; return '## Part\nBody\nKEY: k\nEXAMPLE: e\nQ: a?\nA) 1\nB) 2\nC) 3\nD) 4\nANSWER: A\nWHY: w\nQ: b?\nA) 1\nB) 2\nC) 3\nD) 4\nANSWER: B\nWHY: w'; }; });
+  await page.click('[data-act="ai-lesson"][data-i="0"]');
+  await page.waitForFunction(() => window.__n >= 2);
+  await page.waitForFunction(() => /could not use/i.test(document.body.innerText));
+  assert.strictEqual(await page.evaluate(() => window.__n), 2, 'one retry, no more');
+  assert.strictEqual(await page.locator('#ai-lesson').count(), 0, 'no half-built lesson is shown');
+  assert.deepStrictEqual(errors, []); await ctx.close();
 });
