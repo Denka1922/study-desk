@@ -104,7 +104,9 @@ test('runCli starts the program without a shell, in an empty temporary folder th
   const seen = JSON.parse(fs.readFileSync(rec, 'utf8'));
   assert.deepStrictEqual(seen.ls, [], 'the working folder was empty');
   assert.strictEqual(calls.length, 1); assert.ok(!calls[0].o.shell, 'no shell');
-  assert.strictEqual(calls[0].o.cwd, seen.cwd);
+  // on a Mac the temp folder /var/... is really /private/var/..., and the program reports the real one
+  const real = p => p.replace(/^\/private(?=\/var\/)/, '');
+  assert.strictEqual(real(calls[0].o.cwd), real(seen.cwd));
   assert.ok(!fs.existsSync(seen.cwd), 'scratch folder removed');
   assert.deepStrictEqual(calls[0].a, buildInvocation(loadTools().find(t => t.id === 'codex'), 'hello', seen.cwd).args);
 });

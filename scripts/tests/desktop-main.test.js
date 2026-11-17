@@ -52,7 +52,8 @@ function makeFake({ lock = true, isPackaged = false, template = null } = {}) {
 async function loadMain(opts = {}) {
   const { electron, log } = makeFake(opts);
   const realPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
-  if (opts.platform) Object.defineProperty(process, 'platform', { value: opts.platform });
+  // always pin the platform: these tests describe the Windows program unless a test asks for a Mac, so they must not depend on the computer running them
+  Object.defineProperty(process, 'platform', { value: opts.platform || 'win32' });
   const orig = Module._load;
   const fakeService = { createAiService: deps => { log.serviceCreated++; log.serviceDeps = deps; return new Proxy({ shutdown: () => { log.shutdown++; return Promise.resolve(); } }, { get: (t, k) => (k in t ? t[k] : () => Promise.resolve({})) }); } };
   Module._load = function (request, ...rest) { if (request === 'electron') return electron; if (request === './ai/service') return fakeService; return orig.call(this, request, ...rest); };
