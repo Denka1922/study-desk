@@ -1327,12 +1327,23 @@ function aiTagOf(line){
   return {tag:AI_TAGS[k],text:m[2].replace(/\s*(?:\*\*|__)\s*$/,'').trim()};
 }
 function aiJoinLines(a){ return a.join('\n').replace(/\n{3,}/g,'\n\n').trim(); }
+/* A small model sometimes writes a whole question on one line ("Q: ... A) .. B) .. ANSWER: B WHY: .. LESSON: 2").
+   Put each part back on its own line so the reader below sees the usual layout. Lines that are already split are untouched. */
+var AI_Q_LINE=/^\s*(?:[-*\u2022]\s+|\d{1,2}[.)]\s+)?(?:\*\*|__)?\s*(?:Q|QUESTION)\s*(?:\*\*|__)?\s*[:\uFF1A]/i;
+function aiSplitInlineQuestions(lines){
+  var out=[];
+  lines.forEach(function(l){
+    if(AI_Q_LINE.test(l)&&/\sA\)\s/.test(l)&&/\sANSWER\s*:/i.test(l)) out=out.concat(l.split(/\s+(?=(?:[A-D]\)\s|(?:ANSWER|WHY|EXPLANATION|LESSON)\s*:))/));
+    else out.push(l);
+  });
+  return out;
+}
 function aiUnbold(x){ return String(x).replace(/\*\*|__/g,'').trim(); }
 function aiParseTagged(kind,text,p){
   if(typeof text!=='string'||!/^(outline|lesson|revision|exam)$/.test(kind)) return null;
   var t=text.replace(/\r\n?/g,'\n').replace(/<think>[\s\S]*?<\/think>/gi,'').replace(/^[\s\S]*<\/think>/i,'').replace(/^[ \t]*```[A-Za-z]*[ \t]*$/gm,'');
   if(/^\s*\{/.test(t)) return null;
-  var lines=t.split('\n'), i, ln, tg;
+  var lines=aiSplitInlineQuestions(t.split('\n')), i, ln, tg;
   if(kind==='outline'){
     var title='', summary='', ls=[];
     for(i=0;i<lines.length;i++){

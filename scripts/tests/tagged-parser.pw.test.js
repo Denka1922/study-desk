@@ -38,3 +38,33 @@ test('bold marks around a title, goal or course name are removed', async () => {
   assert.deepStrictEqual([o.title, o.lessons[0].title, o.lessons[0].goal], ['Big Title', 'What Is It?', 'Know it.']);
   await p.close();
 });
+
+// Nemotron 3 Nano 4B wrote every question on ONE line (found in a real run).
+const ONE_LINE_EXAM = Array.from({ length: 12 }, (_, i) =>
+  'Q: Question number ' + i + ' about plants? A) first ' + i + ' B) second ' + i + ' C) third ' + i + ' D) fourth ' + i + '. ANSWER: ' + 'ABCD'[i % 4] + ' WHY: because ' + i + '. LESSON: ' + (1 + i % 3)).join('\n');
+
+test('a question written on one line is split into its question, four options, answer, reason and lesson', async () => {
+  const p = await page();
+  const r = await p.evaluate(t => {
+    const o = aiParseTagged('exam', t, {});
+    return { n: o.questions.length, q0: o.questions[0], q5: o.questions[5], ok: !!aiValidate('exam', o, { outline: { lessons: [{ title: 'a' }, { title: 'b' }, { title: 'c' }] } }) };
+  }, ONE_LINE_EXAM);
+  assert.strictEqual(r.n, 12);
+  assert.deepStrictEqual([r.q0.q, r.q0.options, r.q0.answer, r.q0.explanation, r.q0.lesson], ['Question number 0 about plants?', ['first 0', 'second 0', 'third 0', 'fourth 0.'], 0, 'because 0.', 0]);
+  assert.strictEqual(r.q5.answer, 1); assert.strictEqual(r.q5.lesson, 2);
+  assert.strictEqual(r.ok, true);
+  await p.close();
+});
+
+test('a lesson quiz on one line works too, and a normal multi-line quiz is not changed', async () => {
+  const p = await page();
+  const r = await p.evaluate(() => {
+    const one = '## H\nbody\nKEY: k\nEXAMPLE: e\nQ: Which is right? A) one B) two C) three D) four ANSWER: C WHY: three.';
+    const multi = '## H\nbody\nKEY: k\nEXAMPLE: e\nQ: Which is right?\nA) one\nB) two\nC) three\nD) four\nANSWER: C\nWHY: three.';
+    const a = aiParseTagged('lesson', one, {}).quiz[0], b = aiParseTagged('lesson', multi, {}).quiz[0];
+    return { a: [a.q, a.options, a.answer], b: [b.q, b.options, b.answer] };
+  });
+  assert.deepStrictEqual(r.a, ['Which is right?', ['one', 'two', 'three', 'four'], 2]);
+  assert.deepStrictEqual(r.b, ['Which is right?', ['one', 'two', 'three', 'four'], 2]);
+  await p.close();
+});
