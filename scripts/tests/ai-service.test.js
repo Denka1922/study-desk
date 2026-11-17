@@ -46,7 +46,7 @@ const model9 = 'nemotron-nano-9b-v2', model4 = 'nemotron-3-nano-4b';
 
 test('install refuses unknown, malformed and disabled models', async () => {
   const r = rig();
-  for (const id of ['nope', '../x', 'qwen3-4b', 'glm-4.7-flash', '', undefined]) assert.strictEqual((await err(r.svc.install({ modelId: id, level: 'high' }))).kind, 'bad', String(id));
+  for (const id of ['nope', '../x', 'nemotron-3-ultra-550b-a55b', 'nemotron-3-super-120b-a12b', '', undefined]) assert.strictEqual((await err(r.svc.install({ modelId: id, level: 'high' }))).kind, 'bad', String(id));
   assert.strictEqual((await err(r.svc.install({ modelId: model4, level: 'turbo' }))).kind, 'bad');
   assert.strictEqual(r.calls.download.length, 0);
 });
@@ -54,7 +54,7 @@ test('install refuses unknown, malformed and disabled models', async () => {
 test('install that does not fit the level says ram and suggests a smaller model', async () => {
   const r = rig({ hardware: hw(8) });
   const e = await err(r.svc.install({ modelId: model9, level: 'high' }));
-  assert.strictEqual(e.kind, 'ram'); assert.strictEqual(e.suggestion.modelId, model4); assert.ok(e.message.length > 20);
+  assert.strictEqual(e.kind, 'ram'); assert.ok(e.suggestion.modelId && e.suggestion.modelId !== model9); assert.ok(e.message.length > 20);
   assert.strictEqual(r.calls.download.length, 0);
 });
 
@@ -110,9 +110,9 @@ test('when the installed model no longer fits a lower level, start says ram and 
   const r = rig();
   await r.svc.install({ modelId: model9, level: 'high' });
   const e = await err(r.svc.start({ modelId: model9, level: 'light' }));
-  assert.strictEqual(e.kind, 'ram'); assert.strictEqual(e.suggestion.modelId, model4);
+  assert.strictEqual(e.kind, 'ram'); assert.ok(e.suggestion.modelId && e.suggestion.modelId !== model9);
   const rec = await r.svc.recommend({ level: 'light', language: 'English' });
-  assert.strictEqual(rec.ok, true); assert.strictEqual(rec.model.id, model4);
+  assert.strictEqual(rec.ok, true); assert.strictEqual(rec.model.id, e.suggestion.modelId);
   assert.strictEqual(r.calls.engineStart.length, 0);
   assert.strictEqual((await r.svc.localStatus()).installed.length, 1, 'nothing deleted');
 });
@@ -128,12 +128,11 @@ test('free memory is re-read at every start', async () => {
 });
 
 test('recommend returns an upgrade when a higher level allows a bigger model', async () => {
-  const c = loadCatalog(); c.models.find(m => m.id === 'glm-4.7-flash').enabled = true; c.models.find(m => m.id === 'glm-4.7-flash').sha256 = 'a'.repeat(64);
   const r = rig({ hardware: hw(32, { freeRamBytes: 28 * GiB }) });
-  const svc = createAiService({ dataDir: r.dataDir, catalog: c, hardwareReader: async () => r.hardware, engine: r.engine, engineInstaller: async () => ({}), download: async () => ({}), chatLocal: async () => ({}), runCli: async () => ({}), detectTools: async () => [], freeBytes: async () => 1e12 });
-  const rec = await svc.recommend({ level: 'high', language: 'English' });
-  assert.strictEqual(rec.model.id, model9); assert.strictEqual(rec.upgrade.id, 'glm-4.7-flash');
-  assert.strictEqual((await err(svc.recommend({ level: 'turbo', language: 'English' }))).kind, 'bad');
+  const rec = await r.svc.recommend({ level: 'high', language: 'English' });
+  assert.ok(rec.upgrade && rec.upgrade.tier > rec.model.tier, 'a bigger model is offered one level up');
+  assert.strictEqual((await r.svc.recommend({ level: 'max', language: 'English' })).upgrade, null);
+  assert.strictEqual((await err(r.svc.recommend({ level: 'turbo', language: 'English' }))).kind, 'bad');
 });
 
 test('local chat starts the engine on first use, then reuses it', async () => {
@@ -248,7 +247,9 @@ test('recommend also lists every enabled model with a fits flag for the chosen l
   const light = await r.svc.recommend({ level: 'light', language: 'Turkish' });
   const max = await r.svc.recommend({ level: 'max', language: 'English' });
   for (const rec of [light, max]) {
-    assert.deepStrictEqual(rec.models.filter(m => !m.tooBig).map(m => m.id).sort(), [model4, model9].sort(), 'only enabled models can be downloaded');
+    const enabledIds = loadCatalog().models.filter(m => m.enabled).map(m => m.id).sort();
+    assert.deepStrictEqual(rec.models.filter(m => !m.tooBig).map(m => m.id).sort(), enabledIds, 'only enabled models can be downloaded');
+    assert.ok(enabledIds.includes('nemotron-3.5-lightning-30b-a3b') && enabledIds.includes(model4) && enabledIds.includes(model9));
     assert.ok(rec.models.filter(m => m.tooBig).length >= 3, 'the too-big models are listed too');
     for (const m of rec.models.filter(x => !x.tooBig)) {
       assert.strictEqual(typeof m.fits, 'boolean'); assert.ok(m.name && m.line && m.sizeBytes > 0 && m.license.name && /^https:/.test(m.license.url), m.id);
@@ -258,8 +259,9 @@ test('recommend also lists every enabled model with a fits flag for the chosen l
   assert.strictEqual(light.models.find(m => m.id === model9).fits, false);
   assert.strictEqual(max.models.find(m => m.id === model9).fits, true);
   assert.strictEqual(light.models.find(m => m.id === model4).fit, 'weak', 'Turkish is weak for the 4B model');
+  assert.strictEqual(light.models.find(m => m.id === 'qwen3-8b').fit, 'strong', 'Turkish is strong for Qwen3');
   const tiny = await rig({ hardware: hw(3) }).svc.recommend({ level: 'max', language: 'English' });
-  assert.strictEqual(tiny.ok, false); assert.ok(tiny.models.filter(m => !m.tooBig).length === 2 && tiny.models.every(m => m.fits === false), 'a too-small PC still gets the list, with nothing fitting');
+  assert.strictEqual(tiny.ok, false); assert.ok(tiny.models.filter(m => !m.tooBig).length === loadCatalog().models.filter(m => m.enabled).length && tiny.models.every(m => m.fits === false), 'a too-small PC still gets the list, with nothing fitting');
 });
 
 test('a too-large answer allowance is trimmed to fit the context instead of refusing the question', async () => {

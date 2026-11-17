@@ -98,14 +98,13 @@ test('8 GB: the small model from High up, never the 6.5 GB one; Medium is too lo
   assert.strictEqual(r.ok, false); assert.strictEqual(r.raiseTo, 'high'); assert.strictEqual(r.suggest, 'cli');
 });
 
-test('16 GB at High gets a 9B-class model; the shipped catalog never offers disabled models', () => {
+test('16 GB at High gets an 8B-9B class model; the shipped catalog never offers disabled or list-only models', () => {
   const c = loadCatalog();
   const r = recommend({ hardware: hw(16), level: 'high', language: 'English', catalog: c });
-  assert.strictEqual(r.model.id, 'nemotron-nano-9b-v2');
-  assert.ok(c.models.filter(m => !m.enabled).length >= 2);
+  assert.strictEqual(r.model.id, 'qwen3-8b');
+  assert.ok(c.models.filter(m => !m.enabled).every(m => m.listOnly), 'everything not enabled is list-only');
   const r32 = recommend({ hardware: hw(32, { freeRamBytes: 28 * GiB }), level: 'xhigh', language: 'English', catalog: c });
-  assert.ok(r32.ok && r32.model.enabled, 'GLM is disabled in the shipped catalog, so it is not chosen');
-  assert.notStrictEqual(r32.model.id, 'glm-4.7-flash');
+  assert.ok(r32.ok && r32.model.enabled && !r32.model.listOnly);
 });
 
 test('32 GB at xhigh gets Nemotron 3.5 Lightning once it is enabled and fits', () => {

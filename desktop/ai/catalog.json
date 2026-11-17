@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "_note": "sizeBytes of models is exact when the Git LFS pointer was read, otherwise approximate (disk-space check and display only; the SHA-256 is the integrity check). enabled:false means the checksum is not confirmed twice yet; run the 'Verify AI catalog' workflow, then enable.",
+  "_note": "sizeBytes and sha256 come from the Hugging Face file record at the pinned commit (the url names that commit). The download is checked against sha256 before use. Run the 'Verify AI catalog' workflow before a release and whenever this file changes. listOnly models are shown as too big for normal PCs and can never be downloaded.",
   "engine": {
     "tag": "b12360",
     "assets": {
@@ -104,7 +104,7 @@
       "file": "Qwen_Qwen3-4B-Q4_K_M.gguf",
       "url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/a8512ea1cb744e4e9537847a993f49229b77d1ce/Qwen_Qwen3-4B-Q4_K_M.gguf",
       "sha256": "fbe1d5edd4ce802ae3ae7c7e4ab7d09789d697fdac1fc7929f8df4ca3c41bae3",
-      "sizeBytes": 2500000000,
+      "sizeBytes": 2497280960,
       "minRamBytes": 5000000000,
       "recRamBytes": 8000000000,
       "kvBytesPerToken": 147456,
@@ -128,7 +128,7 @@
         ],
         "fair": []
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "glm-4.7-flash",
@@ -136,9 +136,9 @@
       "family": "glm",
       "params": "30B (about 3B active)",
       "file": "zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
-      "url": "https://huggingface.co/bartowski/zai-org_GLM-4.7-Flash-GGUF/resolve/main/zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
-      "sha256": null,
-      "sizeBytes": 18500000000,
+      "url": "https://huggingface.co/bartowski/zai-org_GLM-4.7-Flash-GGUF/resolve/464d07505b441959737cd04d900f047469614c8d/zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
+      "sha256": "42c0c1a30fe2f30097ffedd554a94c2d6abc5f95b8a35ce99cd523f78ef6711b",
+      "sizeBytes": 18474983296,
       "minRamBytes": 24000000000,
       "recRamBytes": 32000000000,
       "kvBytesPerToken": 80000,
@@ -163,7 +163,7 @@
           "Arabic"
         ]
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "nemotron-3.5-bolt-e4b",
@@ -171,9 +171,9 @@
       "family": "nemotron",
       "params": "8B (4B working)",
       "file": "Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf",
-      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/resolve/main/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf",
-      "sha256": null,
-      "sizeBytes": 6180000000,
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/resolve/1db54d5b12533ff1bcaa8e42cf4c667988a1f1be/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf",
+      "sha256": "c8af2b8aea10a690a1d9491db744a9446660173cb38fc489612b556615a69612",
+      "sizeBytes": 6180446208,
       "minRamBytes": 8000000000,
       "recRamBytes": 16000000000,
       "kvBytesPerToken": 65536,
@@ -189,7 +189,7 @@
         ],
         "fair": []
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "nemotron-3-nano-30b-a3b",
@@ -197,9 +197,9 @@
       "family": "nemotron",
       "params": "30B (about 3B working)",
       "file": "nvidia_Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf",
-      "url": "https://huggingface.co/bartowski/nvidia_Nemotron-3-Nano-30B-A3B-GGUF/resolve/main/nvidia_Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf",
-      "sha256": null,
-      "sizeBytes": 18130000000,
+      "url": "https://huggingface.co/bartowski/nvidia_Nemotron-3-Nano-30B-A3B-GGUF/resolve/1fc64d5b160654ec892df2708aa893b0e96e6491/nvidia_Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf",
+      "sha256": "d9d2831dd72e9ee1f2b960ed7b00a266aee4dcce665c584f8689f962cce5b3f3",
+      "sizeBytes": 18134188256,
       "minRamBytes": 24000000000,
       "recRamBytes": 32000000000,
       "kvBytesPerToken": 49152,
@@ -220,7 +220,7 @@
           "Italian"
         ]
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "nemotron-3.5-lightning-30b-a3b",
@@ -228,9 +228,9 @@
       "family": "nemotron",
       "params": "30B (about 3B working)",
       "file": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-Q4_0.gguf",
-      "url": "https://huggingface.co/ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/resolve/main/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-Q4_0.gguf",
-      "sha256": null,
-      "sizeBytes": 18900000000,
+      "url": "https://huggingface.co/ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/resolve/ba87e1d2152af029eb0e392b155c72c0dd92aa5b/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-Q4_0.gguf",
+      "sha256": "61f87e75974e4b535dcdf9aad056541a9514f1dfa4538b463b081d19b7a00e3c",
+      "sizeBytes": 18898091584,
       "minRamBytes": 24000000000,
       "recRamBytes": 32000000000,
       "kvBytesPerToken": 49152,
@@ -251,7 +251,7 @@
           "Italian"
         ]
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "glm-4-9b-0414",
@@ -259,9 +259,9 @@
       "family": "glm",
       "params": "9B",
       "file": "THUDM_GLM-4-9B-0414-Q4_K_M.gguf",
-      "url": "https://huggingface.co/bartowski/THUDM_GLM-4-9B-0414-GGUF/resolve/main/THUDM_GLM-4-9B-0414-Q4_K_M.gguf",
-      "sha256": null,
-      "sizeBytes": 6000000000,
+      "url": "https://huggingface.co/bartowski/THUDM_GLM-4-9B-0414-GGUF/resolve/211924cd949e153b1017ed635e5b127d0b594e6f/THUDM_GLM-4-9B-0414-Q4_K_M.gguf",
+      "sha256": "2b95f0b88eca423bfb874c4f8e7b9574ec76acab2befd272076e8a8dce31216a",
+      "sizeBytes": 6166574464,
       "minRamBytes": 10000000000,
       "recRamBytes": 16000000000,
       "kvBytesPerToken": 65536,
@@ -282,7 +282,7 @@
           "German"
         ]
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "qwen3-8b",
@@ -290,9 +290,9 @@
       "family": "qwen",
       "params": "8B",
       "file": "Qwen_Qwen3-8B-Q4_K_M.gguf",
-      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf",
-      "sha256": null,
-      "sizeBytes": 5030000000,
+      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/0b69f75b7472688e6808490aa2b85efdb81b5ce7/Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "sha256": "54fffa050078e984116639c83dfb64b5aa6d4cd474e018b076777c632bbccccd",
+      "sizeBytes": 5027784224,
       "minRamBytes": 8000000000,
       "recRamBytes": 16000000000,
       "kvBytesPerToken": 147456,
@@ -316,7 +316,7 @@
         ],
         "fair": []
       },
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "nemotron-3-super-120b-a12b",
