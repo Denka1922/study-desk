@@ -110,10 +110,11 @@ Open the **AI Tutor** page and choose how it should run.
 
 1. Choose **Local**. The screen shows your computer's memory, processor and graphics card and suggests a model.
 2. Press **Download**. The program downloads the llama.cpp engine and the model once, checks their SHA-256 fingerprints, and keeps them in its own folder.
-   - **Disk space:** the small model is about 2.8 GB; the larger one is about 6.5 GB. Make sure there is room, and an internet connection for the first download only.
-3. Pick a power level (Light, Medium, High, Extra high, Max). Higher levels use more memory and processor and answer faster; lower levels leave your computer free for other work.
-4. Press **Start**. After this, questions are answered on your computer and nothing leaves it.
-5. An interrupted download continues where it stopped.
+   - **Disk space:** the smallest models are about 2.5 to 2.8 GB, the middle ones 5 to 6.5 GB, and the biggest you can download (Nemotron 3.5 Lightning, Nemotron 3 Nano 30B, GLM-4.7-Flash) about 18 to 19 GB. The screen shows the exact size before you download. Make sure there is room, and an internet connection for the first download only.
+3. To use another model, press **Choose another model** and pick one from the list. Models that do not fit the power level say so. Models that no normal computer can run (Nemotron Super and Ultra) are shown in their own box and cannot be chosen.
+4. Pick a power level (Light, Medium, High, Extra high, Max). Higher levels use more memory and processor and answer faster; lower levels leave your computer free for other work.
+5. Press **Start**. After this, questions are answered on your computer and nothing leaves it.
+6. An interrupted download continues where it stopped.
 
 ### CLI (Windows and Mac program)
 

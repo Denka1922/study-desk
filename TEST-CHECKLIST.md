@@ -77,7 +77,7 @@ Do not send any API key or keystore password.
 - [ ] G4. A link in the planner opens in your browser, not inside the app.
 - [ ] G5. If macOS says the app is "damaged": run `xattr -cr "/Applications/Study Desk.app"` in Terminal once and try again.
 
-## H. Local AI (Windows and Mac program only; needs about 3 to 7 GB free disk space and an internet connection for the one-time download)
+## H. Local AI (Windows and Mac program only; needs about 3 to 20 GB free disk space and an internet connection for the one-time download)
 
 - [ ] H1. AI Tutor > Local. The screen shows your computer: memory in GB, number of cores and your graphics card (or "no separate graphics card"). Compare with Task Manager (Windows) or About This Mac. It says what it will recommend and why.
 - [ ] H2. Press each power level (Light, Medium, High, Extra high, Max). The recommended model line updates each time, and the "may use up to ... of memory" text grows with the level. On a small PC a low level may offer only the smaller model.
@@ -87,7 +87,9 @@ Do not send any API key or keystore password.
 - [ ] H6. Press Start. After up to a minute you land on the Tutor. Build a course in English and a lesson. Check that it answers in plain, sensible text (not empty, not cut off).
 - [ ] H7. While it answers, open Task Manager (Windows) or Activity Monitor (Mac). Memory use of `llama-server` must stay below the level's limit at Light, Medium, High, Extra high and Max (try two of them). With a graphics card, GPU use should rise (Vulkan on Windows, Metal on Apple Silicon).
 - [ ] H8. The token counter under the chat shows "Last answer" and "This session" and grows with each answer. Roughly compare the numbers with the length of the text.
-- [ ] H9. Choose another language (for example Turkish): a weak-language warning must appear for the 4B model.
+- [ ] H9. Choose another language (for example Turkish): a weak-language warning must appear for a Nemotron model; Qwen3 must not show it.
+- [ ] H9a. Under **Choose another model** you see every downloadable model (Nemotron 3 Nano 4B and 30B, Nemotron Nano 9B v2, Nemotron 3.5 Bolt and Lightning, GLM-4-9B, GLM-4.7-Flash, Qwen3 4B and 8B). Models that are too big for the power level say "Too big for this level". Nemotron 3 Super, 3.5 Super VL and 3 Ultra are in a separate "too big" box, cannot be clicked and say what they need.
+- [ ] H9b. Download and start one model that is not the first one (for example Qwen3 8B). Build a lesson. It must show coloured tip, note or warning boxes, a formula block or numbered steps where the AI used them, then the quiz. Switch light and dark: all boxes stay readable.
 - [ ] H10. Quit the program. In Task Manager or Activity Monitor no `llama-server` may remain after a few seconds. Open it again: Start works without downloading again.
 - [ ] H11. Back on the Local screen press Delete downloaded model: Start becomes disabled and the disk space is freed.
 

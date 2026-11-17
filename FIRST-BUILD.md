@@ -65,7 +65,7 @@ Now go through `TEST-CHECKLIST.md`, sections A to C.
 
 ## 8. Once: check the AI model files (Verify AI catalog)
 
-The Local AI downloads exact pinned model and engine files. Before the first release, and whenever those files change, run the check once: on GitHub open **Actions**, pick **Verify AI catalog** on the left, **Run workflow**, **Run workflow**. A green run means every pinned file still matches its fingerprint. A red run means a file moved or changed: send Claude the log text. Two more models (Qwen3 and GLM) stay switched off until they have passed this check and Claude has enabled them.
+The Local AI downloads exact pinned model and engine files. Before the first release, and whenever those files change, run the check once: on GitHub open **Actions**, pick **Verify AI catalog** on the left, **Run workflow**, **Run workflow**. A green run means every pinned file still matches its fingerprint. A red run means a file moved or changed: send Claude the log text. This covers every downloadable model (Nemotron, GLM and Qwen3). The three giant models (Nemotron 3 Super and Ultra) are list-only, have no download and are not checked.
 
 ## If a step turns red
 

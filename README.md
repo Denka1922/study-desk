@@ -30,7 +30,7 @@ Choose one on the Tutor setup screen.
 
 | Mode | Where | How it works | Does your text leave the computer? |
 |---|---|---|---|
-| **Local** | Windows and Mac program only | Downloads a small open model (NVIDIA Nemotron) and the open-source [llama.cpp](https://github.com/ggml-org/llama.cpp) engine once, then answers on your computer. | No |
+| **Local** | Windows and Mac program only | Downloads an open model (NVIDIA Nemotron, GLM or Qwen3) and the open-source [llama.cpp](https://github.com/ggml-org/llama.cpp) engine once, then answers on your computer. | No |
 | **CLI** | Windows and Mac program only | Uses an AI command-line tool you already have installed and signed in to: OpenAI Codex CLI, Gemini CLI or goose. | Usually yes: these tools mostly use a cloud service. The screen says so for each tool. |
 | **Online key** | Everywhere, including Android and the web page | Your own API key for Gemini, OpenAI or Anthropic. | Yes, to the provider you choose |
 
@@ -40,7 +40,11 @@ Local mode details:
 - Five power levels (Light, Medium, High, Extra high, Max) limit how much memory and processor it may use.
 - A token counter shows the last answer and the session total.
 - Downloads are pinned to exact files and checked with a SHA-256 fingerprint before use.
-- Qwen3 and GLM models are in the catalog but switched off until their fingerprints are verified.
+- The catalog has nine models you can download, from about 2.5 GB (Qwen3 4B, Nemotron 3 Nano 4B) up to about 19 GB (Nemotron 3.5 Lightning and Nemotron 3 Nano 30B, GLM-4.7-Flash). The program picks the biggest one that fits your memory and the power level, and you can choose another one yourself.
+- Models that no normal computer can run (Nemotron 3 Super 120B, Nemotron 3.5 Super VL 120B and Nemotron 3 Ultra 550B) are listed in a separate box as "too big", with what they need. They cannot be downloaded.
+- Models in other languages: Qwen3 is strong in Turkish and many other languages; the Nemotron models are best in English. The screen warns you when a model is weak in the tutor language.
+
+How the Tutor writes: the AI only writes plain lines, each starting with a short tag (`TITLE:`, `LESSON:`, `TIP:`, `NOTE:`, `WARN:`, `FORMULA:`, `STEP:`, `KEY:`, `Q:`, `ANSWER:` ...). The page reads the tags and draws the layout itself: tip, note and warning boxes, a formula block, numbered steps, key points and the quiz. This keeps answers short, so it is faster and uses fewer tokens, and the layout always matches the page's light and dark theme. A reply in JSON is still accepted.
 
 Left out on purpose because they cannot be used safely in a one-question mode: GitHub Copilot CLI, opencode, Crush and aider.
 

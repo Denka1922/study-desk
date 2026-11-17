@@ -9,3 +9,5 @@ mobile/android/app/build/
 *.keystore
 keystore.properties
 *.apk
+__pycache__/
+*.pyc

@@ -16,9 +16,9 @@ Study Desk = a personal student planner (calendar, exams and grades, deadlines, 
 | `p8-auth.*`, `p9-devices.*` | login build only; device linking and QR |
 | `p10-polish.*`, `p11-gsap.*` | motion and polish (GSAP pinned to 3.15.0) |
 | `p12-ai.css` | all AI Tutor styles |
-| `p12a-ai-validate.js` | checks the AI's JSON (outline, lesson, exam) |
-| `p12b-ai-render.js` | safe rendering of AI text |
-| `p12c-ai-prompts.js` | prompts: `aiBuildPrompt(kind,params)`, kinds outline, lesson, exam, revision, chat |
+| `p12a-ai-validate.js` | `aiParseTagged(kind,text)` turns the AI's tagged lines (TITLE:, LESSON:, TIP:, Q: ...) into the same objects that `aiCheck*` validate; a JSON reply still works (`aiExtractJson`) |
+| `p12b-ai-render.js` | safe rendering of AI text; TIP/NOTE/WARN lines become boxes, FORMULA a block, STEP a numbered list |
+| `p12c-ai-prompts.js` | prompts: `aiBuildPrompt(kind,params)`, kinds outline, lesson, exam, revision, chat. Outline, lesson, exam and revision ask for tagged lines, not JSON |
 | `p12d-ai-providers.js` | the three online providers; `aiSend(o)`, `aiErr(kind,status,message)` |
 | `p12e-ai-store.js` | settings, key and course storage; `aiCleanSettings` |
 | `p12f-ai-ui.js` | Tutor screens and flow; `aiRun`, `aiScreen`, `aiErrorText`, click handler `aiAct` |
