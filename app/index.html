@@ -1327,7 +1327,8 @@ function aiTagOf(line){
   return {tag:AI_TAGS[k],text:m[2].replace(/\s*(?:\*\*|__)\s*$/,'').trim()};
 }
 function aiJoinLines(a){ return a.join('\n').replace(/\n{3,}/g,'\n\n').trim(); }
-function aiParseTagged(kind,text){
+function aiUnbold(x){ return String(x).replace(/\*\*|__/g,'').trim(); }
+function aiParseTagged(kind,text,p){
   if(typeof text!=='string'||!/^(outline|lesson|revision|exam)$/.test(kind)) return null;
   var t=text.replace(/\r\n?/g,'\n').replace(/<think>[\s\S]*?<\/think>/gi,'').replace(/^[\s\S]*<\/think>/i,'').replace(/^[ \t]*```[A-Za-z]*[ \t]*$/gm,'');
   if(/^\s*\{/.test(t)) return null;
@@ -1336,10 +1337,12 @@ function aiParseTagged(kind,text){
     var title='', summary='', ls=[];
     for(i=0;i<lines.length;i++){
       tg=aiTagOf(lines[i]); if(!tg) continue;
-      if(tg.tag==='TITLE') title=tg.text;
-      else if(tg.tag==='SUMMARY') summary=tg.text;
-      else if(tg.tag==='LESSON'){ var b=tg.text.indexOf('|'); ls.push(b<0?{title:tg.text,goal:''}:{title:tg.text.slice(0,b).trim(),goal:tg.text.slice(b+1).trim()}); }
+      if(tg.tag==='TITLE') title=aiUnbold(tg.text);
+      else if(tg.tag==='SUMMARY') summary=aiUnbold(tg.text);
+      else if(tg.tag==='LESSON'){ var b=tg.text.indexOf('|'); ls.push(b<0?{title:aiUnbold(tg.text),goal:''}:{title:aiUnbold(tg.text.slice(0,b)),goal:aiUnbold(tg.text.slice(b+1))}); }
     }
+    /* a small model sometimes writes more lessons than asked: the first ones are the best ordered, so keep those */
+    var want=p&&(p.lessonCount|0); if(want>0&&ls.length>want) ls=ls.slice(0,want);
     return (title||ls.length)?{title:title,summary:summary,lessons:ls}:null;
   }
   var secs=[], key=[], example=null, quiz=[], state='sec', seen=false, cur=null, field='q', DRAW={TIP:1,NOTE:1,WARN:1,FORMULA:1,STEP:1};
@@ -1794,7 +1797,7 @@ function aiRun(kind,params){
       .then(function(r){
         if(!built.json&&!built.lines) return {text:r.text.trim().slice(0,4000)};
         /* lines are the expected format; a JSON reply (an older habit of some models) is still accepted */
-        var obj=built.lines?aiParseTagged(kind,r.text):null, v=obj&&aiValidate(kind,obj,params);
+        var obj=built.lines?aiParseTagged(kind,r.text,params):null, v=obj&&aiValidate(kind,obj,params);
         if(!v){ obj=aiExtractJson(r.text); v=obj&&aiValidate(kind,obj,params); }
         if(!v) throw aiErr('bad',200,'The AI reply did not match the expected format.');
         return v;
