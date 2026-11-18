@@ -1,0 +1,52 @@
+name: Mac check
+
+# Builds the real Mac app and runs it on real Macs at GitHub (Apple Silicon and Intel):
+# the normal tests, the packaged app opening, the Mac hardware reading, and the real AI engine and a real small model.
+# Run it by hand: Actions, Mac check, Run workflow.
+on:
+  workflow_dispatch:
+  push:
+    branches: [tools/mac-check]
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, model: nemotron-3-nano-4b }
+          - { os: macos-15-intel, model: qwen3-4b }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: The normal tests, on a Mac
+        run: |
+          node scripts/check.js --ci > t.log 2>&1 || true
+          grep -n '^not ok' -B2 -A30 t.log | head -120 || true
+          tail -12 t.log
+      - name: Build the Mac app
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm ci
+          npm run dist:mac 2>&1 | tail -25
+          ls -la dist
+      - name: Run the packaged Mac app
+        env:
+          REAL_MODEL: ${{ matrix.model }}
+        run: |
+          npm i --no-save playwright
+          node scripts/mac-check.js

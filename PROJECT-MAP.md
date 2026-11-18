@@ -36,7 +36,7 @@ Page code rules: classic script, ES5 style (`var`, `function`), everything insid
 | `desktop/ai/` | the Local and CLI AI, main process only (below) |
 | `mobile/` | Android (Capacitor); open `mobile/android` in Android Studio. Android has the API key only |
 | `site/index.html` | download page |
-| `scripts/` | `check.js` (all tests), `make-zip.py`, `sync-app.py`, icons, version scripts |
+| `scripts/` | `check.js` (all tests), `mac-check.js` (run by the Mac check workflow on real Macs), `make-zip.py`, `sync-app.py`, icons, version scripts |
 | `scripts/tests/` | all tests; `helpers.js` has `pageWithExports(names)` to reach the page's inner functions without touching the shipped file |
 | `.github/workflows/` | `build.yml` (test, build Windows and Mac, publish), `verify-catalog.yml` (manual: re-check model file fingerprints) |
 | `README.md`, `FIRST-BUILD.md`, `PLAY-STORE.md`, `TEST-CHECKLIST.md` | guides for the owner |

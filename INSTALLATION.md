@@ -69,7 +69,7 @@ shasum -a 256 Study-Desk-<version>-mac-arm64.zip
 ```
 The printed number must match the fingerprint that came with the files.
 
-> The Mac build was made on a Linux machine and has not been run on a real Mac yet. Please report anything that fails.
+> The Mac app is built and tested automatically on real Macs at GitHub (Apple Silicon and Intel): it opens, reads the chip and runs the Local AI. It has not yet been used by a person on a Mac, so the first-open steps above are not tested. Please report anything that fails.
 
 ---
 
