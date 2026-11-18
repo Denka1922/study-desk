@@ -21,7 +21,7 @@ function loadPlaywright() {
 }
 // The shipped page keeps its code inside one function, so tests cannot reach it. This copies app/index.html to a
 // temp file with a few of its inner names copied onto window (only in that copy, never in the shipped file).
-function pageWithExports(names) {
+function pageWithExports(names, extra = '') {
   const os = require('node:os');
   const html = read('app/index.html');
   const end = html.lastIndexOf('})();\n</script>');
@@ -29,7 +29,7 @@ function pageWithExports(names) {
   const lines = names.map(n => "try{if(typeof " + n + "!=='undefined')window." + n + "=" + n + ";}catch(e){}").join('\n');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sd-page-'));
   const file = path.join(dir, 'index.html');
-  fs.writeFileSync(file, html.slice(0, end) + lines + '\n' + html.slice(end));
+  fs.writeFileSync(file, html.slice(0, end) + extra + '\n' + lines + '\n' + html.slice(end));
   return { file, url: require('node:url').pathToFileURL(file).href, cleanup() { fs.rmSync(dir, { recursive: true, force: true }); } };
 }
 module.exports = { ROOT, read, walk, loadPlaywright, pageWithExports };

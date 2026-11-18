@@ -25,6 +25,10 @@ Study Desk = a personal student planner (calendar, exams and grades, deadlines, 
 | `p12g-ai-local.js` | desktop bridge client, token counter, `aiSendBridge` |
 | `p12h-ai-local-ui.js` | Local and CLI setup screens |
 | `p12z-ai-test-export.js` | test-only export used by the old test pages |
+| `p13-sync.css`, `p13a-sync-core.js` | Sync: stamps (`syncScan`), document (`syncDoc`), merge (`syncMerge`), apply/receive (`syncApply`, `syncReceive`), keys and sealed messages (`syncKeys`, `syncSeal`, `syncOpen`), pairing code (`syncMakeCode`, `syncParseCode`) |
+| `p13b-sync-engine.js` | Sync: PC bridge use, phone engine (find the PC, poll, relay cycle), `syncStart`, `syncForget`, `syncBoot` |
+| `p13c-sync-ui.js` | Sync button and window, QR drawing, camera scanning |
+| `vendor-qrcode-generator.min.js`, `vendor-jsqr.min.js` | the two QR libraries, copied in as they are (minified); local and test builds only |
 
 Page code rules: classic script, ES5 style (`var`, `function`), everything inside one function, so names are shared by all parts. **Check a new top-level name does not already exist** (an `AI_LEVELS` clash once wiped course levels). No inline event handlers (use `data-act`). Colors only from theme variables. No key or secret anywhere in the code.
 
@@ -36,6 +40,9 @@ Page code rules: classic script, ES5 style (`var`, `function`), everything insid
 | `desktop/ai/` | the Local and CLI AI, main process only (below) |
 | `mobile/` | Android (Capacitor); open `mobile/android` in Android Studio. Android has the API key only |
 | `site/index.html` | download page |
+| `desktop/sync/` | `crypto.js`, `lan-server.js` (phone-facing door), `relay-client.js`, `service.js`, `ipc.js`; the page reaches it through `window.studyDesk.sync` (see `preload.js`) |
+| `relay/` | `worker.js` (Cloudflare Worker), `wrangler.toml`, `README.md` |
+| `SYNC.md` | the contract for all of the above |
 | `scripts/` | `check.js` (all tests), `mac-check.js` (run by the Mac check workflow on real Macs), `make-zip.py`, `sync-app.py`, icons, version scripts |
 | `scripts/tests/` | all tests; `helpers.js` has `pageWithExports(names)` to reach the page's inner functions without touching the shipped file |
 | `.github/workflows/` | `build.yml` (test, build Windows and Mac, publish), `verify-catalog.yml` (manual: re-check model file fingerprints) |

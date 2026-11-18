@@ -124,5 +124,15 @@ Free-tier limits (Cloudflare Workers KV) are about 1,000 writes and 100,000 read
 | Phone network calls | `Capacitor.Plugins.CapacitorHttp` (native, so the page's own network rules are not loosened) |
 | Relay | `relay/` |
 
-The phone allows plain-HTTP traffic on the local network (`usesCleartextTraffic`). That is safe here because every body is
+The Android app asks for the camera (only to read the QR code; pasting the code works without it) and allows plain-HTTP traffic (`usesCleartextTraffic`, needed to reach `http://192.168.x.x`). That is safe here because every body is
 AES-GCM encrypted and authenticated; it is used only through the native HTTP call, never by the page's own requests.
+
+## Known limits (honest list)
+
+* Both apps must be open for Wi-Fi sync; the PC program must be running. The phone checks every 5 seconds while its screen is on and the app is in front (every 20 seconds through the relay).
+* The phone looks for the PC at its last address, at the addresses in the code (and the next 9 ports), then on the rest of the same /24 network. If the router puts the devices on different networks, or isolates Wi-Fi clients (school and guest networks), Wi-Fi mode cannot work: use the relay.
+* If the Android app is ever built for Android 17 (`targetSdkVersion` 37) it must declare and request the `ACCESS_LOCAL_NETWORK` permission, or local traffic is blocked. At the current target (36) it is not needed.
+* Newest change wins by device clocks; a deleted item is forgotten after 90 days (a device that was offline longer can bring it back).
+* The AI courses are merged whole: if two devices change the same course, the newer one replaces the other.
+* Anyone who has the pairing code can read and change the planner; "Forget this connection" invalidates it.
+* The relay only sees encrypted blobs, the room name (derived from the secret), IP addresses of the devices (Cloudflare logs), and sizes and times.

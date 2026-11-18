@@ -66,6 +66,37 @@ function findApp() {
       await win.evaluate(() => window.studyDesk.ai.local.stop());
     } catch (e) { rec('real local AI on the Mac', false, String(e && e.message || e).slice(0, 900)); }
   }
+
+  // Sync with the phone: the real Wi-Fi door of the real app. A pretend phone (this script) pairs and exchanges data with the app window.
+  try {
+    const C = require('../desktop/sync/crypto'), http = require('node:http');
+    const secret = C.randomSecret(), keys = C.deriveKeys(secret);
+    const post = (port, body) => new Promise((resolve, reject) => {
+      const data = JSON.stringify(body);
+      const req = http.request({ host: '127.0.0.1', port, path: '/v1/x', method: 'POST', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) }, agent: false }, res => {
+        let s = ''; res.on('data', c => { s += c; }); res.on('end', () => resolve({ status: res.statusCode, text: s }));
+      });
+      req.on('error', reject); req.end(data);
+    });
+    const hasSync = await win.evaluate(() => !!(window.studyDesk && window.studyDesk.sync && window.studyDesk.sync.version === 1));
+    rec('the app offers the sync bridge to its page', hasSync, '');
+    const started = await win.evaluate(a => window.studyDesk.sync.start(a), { secretB64: C.b64url(secret), mode: 'wifi', deviceId: C.randomId(), name: 'CI Mac' });
+    rec('sync starts and opens a Wi-Fi door', !!(started && started.ok && started.port >= 47821), JSON.stringify(started));
+    await win.evaluate(() => { window.studyDesk.sync.onRequest(m => Promise.resolve({ rev: 'r-' + m.rev, doc: { v: 1, items: { x1: { k: 'link', u: 5, d: { id: 'x1', name: 'From the app', url: 'https://example.com/' } } }, gone: {} } })); });
+    const hello = await post(started.port, C.seal(keys, { op: 'hello', t: Date.now(), from: 'ci', nonce: 'n-123' }));
+    const hr = hello.status === 200 ? C.open(keys, JSON.parse(hello.text)) : null;
+    rec('the door answers a paired phone (hello)', !!(hr && hr.ok && hr.nonce === 'n-123' && hr.name === 'CI Mac'), hello.status + ' ' + JSON.stringify(hr));
+    const sync = await post(started.port, C.seal(keys, { op: 'sync', t: Date.now(), from: 'ci', rev: 'abc', doc: { v: 1, items: {}, gone: {} } }));
+    const sr = sync.status === 200 ? C.open(keys, JSON.parse(sync.text)) : null;
+    rec('the app window merges what the phone sends and the answer comes back sealed', !!(sr && sr.ok && sr.rev === 'r-abc' && sr.doc.items.x1), sync.status + ' ' + JSON.stringify(sr).slice(0, 200));
+    const wrong = await post(started.port, C.seal(C.deriveKeys(C.randomSecret()), { op: 'hello', t: Date.now(), from: 'x', nonce: 'z' }));
+    rec('a phone with the wrong code is turned away', wrong.status === 401, String(wrong.status));
+    const plain = await new Promise(r => { http.get({ host: '127.0.0.1', port: started.port, path: '/', agent: false }, res => { res.resume(); r(res.statusCode); }).on('error', () => r(0)); });
+    rec('anything else on the door gives nothing away (404)', plain === 404, String(plain));
+    await win.evaluate(() => window.studyDesk.sync.stop());
+    const gone = await post(started.port, C.seal(keys, { op: 'hello', t: Date.now(), from: 'ci', nonce: 'n' })).then(() => false, () => true);
+    rec('stopping sync closes the door', gone, '');
+  } catch (e) { rec('sync on the real app', false, String(e && e.message || e).slice(0, 900)); }
   rec('no errors in the page', errs.length === 0, errs.join(' | '));
   await shot('end');
   await eapp.close();

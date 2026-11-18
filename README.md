@@ -22,7 +22,8 @@ See [INSTALLATION.md](INSTALLATION.md) for step-by-step install and build instru
 - **Exams and grades** with averages.
 - **Light and dark themes.**
 - **AI Tutor** that can make a course outline, lessons, practice exams and revision, and answer questions. It has three ways to run (see below).
-- **No account and no server.** Everything is stored on your device.
+- **Sync between your PC and your phone.** Scan a QR code once; after that changes on one device appear on the other. Choose **Same Wi-Fi** (no account), **Over the internet** (through a free relay you set up yourself) or **Both**. Everything is encrypted, and your data never goes to any server of ours. How it works: `SYNC.md`.
+- **No account and no server of ours.** Everything is stored on your device; sync goes directly between your devices (or through your own relay).
 
 ## The AI Tutor: three ways to run
 
@@ -56,6 +57,9 @@ Your API key is stored only on your device. Never share a key, and never commit 
 |---|---|
 | `app/` | `index.html`, the finished page. It is generated from source parts that are kept outside this repository (see Contributing). |
 | `desktop/` | The Electron program. `main.js` (window and startup), `preload.js` (the only bridge to the page), `security.js` (link rules). |
+| `desktop/sync/` | Sync, PC side: the Wi-Fi server, the relay client, encryption. Runs in the main process only and stays closed until you pair a phone. |
+| `relay/` | The small internet relay (a free Cloudflare Worker you deploy yourself). It stores only encrypted data it cannot read. See `relay/README.md`. |
+| `SYNC.md` | How sync works and the exact message formats. |
 | `desktop/ai/` | The Local and CLI AI. It runs in the main process only; the page never gets a file path, command or port. |
 | `mobile/` | The Android project (Capacitor). Open `mobile/android` in Android Studio. |
 | `site/` | The download page. |
@@ -68,6 +72,10 @@ Your API key is stored only on your device. Never share a key, and never commit 
 | `PLAY-STORE.md` | Android Studio and Google Play. |
 | `TEST-CHECKLIST.md` | What to click through on each platform. |
 | `PROJECT-MAP.md` | A short map of the code for contributors. |
+
+## Sync in short
+
+On the PC: **Sync**, pick how the devices find each other, a QR code appears. On the phone: **Sync**, **Scan the code**. Planner data (events, exams and grades, to-dos, shortcuts) and the AI Tutor courses are merged; the newest change wins, deletions travel, the AI key and AI settings never leave a device. Wi-Fi mode needs both apps open on the same Wi-Fi (Windows asks once whether to allow the program on private networks: allow it). Some school and guest Wi-Fi networks stop devices from seeing each other; use the internet option there. Details, limits and the security design are in `SYNC.md`.
 
 ## Tests
 
@@ -87,11 +95,15 @@ Automatic tests cover the page, settings, link rules, version handling, the down
 - building the Android project and running it on a phone;
 - the Local and CLI AI on a real Windows PC or Mac. The automatic tests use fakes: no real model download, graphics card or signed-in command-line tool.
 
-**Tested with real models (on a Linux computer at GitHub, processor only):** the real Tutor prompts and the real llama.cpp engine were run with Nemotron 3 Nano 4B, Nemotron 3.5 Bolt, Nemotron Nano 9B v2, Qwen3 4B, Qwen3 8B and GLM-4-9B. They wrote valid outlines, lessons, exams and revisions (also a Turkish lesson for Nemotron 3 Nano 4B, Nemotron 3.5 Bolt and Qwen3 8B). These runs found and fixed real problems: a 5 minute wait limit on slow computers, the engine "thinking" for minutes before answering, a model writing too many lessons, a model writing each question on one line, and models writing only three quiz questions or nine exam questions. **Tested on real Macs (GitHub's Apple Silicon Mac with macOS 26 and Intel Mac with macOS 15, no person at the keyboard):** the workflow **Mac check** builds the Mac app, runs all tests on the Mac, opens the packaged app, checks it reads the Mac chip, downloads the real Mac engine and a real model, starts it and gets a real answer. Run it again any time: Actions, Mac check, Run workflow.
+**Tested with real models (on a Linux computer at GitHub, processor only):** the real Tutor prompts and the real llama.cpp engine were run with Nemotron 3 Nano 4B, Nemotron 3.5 Bolt, Nemotron Nano 9B v2, Qwen3 4B, Qwen3 8B and GLM-4-9B. They wrote valid outlines, lessons, exams and revisions (also a Turkish lesson for Nemotron 3 Nano 4B, Nemotron 3.5 Bolt and Qwen3 8B). These runs found and fixed real problems: a 5 minute wait limit on slow computers, the engine "thinking" for minutes before answering, a model writing too many lessons, a model writing each question on one line, and models writing only three quiz questions or nine exam questions. **Sync was tested with the real PC code, the real relay code and the real page on both sides, using stand-ins only for the phone's network plug-in and the PC window (fake phone camera showing a real QR code included).** What has **not** been tested yet: a real Android phone (camera, native network call, Android's own network rules), the Windows firewall prompt, a real router, and the relay on a real Cloudflare account. `TEST-CHECKLIST.md` section J lists these steps. **Tested on real Macs (GitHub's Apple Silicon Mac with macOS 26 and Intel Mac with macOS 15, no person at the keyboard):** the workflow **Mac check** builds the Mac app, runs all tests on the Mac, opens the packaged app, checks it reads the Mac chip, downloads the real Mac engine and a real model, starts it and gets a real answer. Run it again any time: Actions, Mac check, Run workflow.
 
 **Not run for real:** Nemotron 3.5 Lightning, Nemotron 3 Nano 30B and GLM-4.7-Flash (too big for that computer), and any model on Windows or Mac. Small models still make mistakes: always check what the Tutor tells you.
 
 Use [TEST-CHECKLIST.md](TEST-CHECKLIST.md) to check these, and please open an issue if something fails.
+
+## Libraries inside the page
+
+GSAP (animation), `qrcode-generator` (draws the QR code, MIT) and `jsQR` (reads it with the camera, Apache-2.0) are copied into the page. Their licence notices are in `THIRD-PARTY-NOTICES.md`.
 
 ## Security notes
 

@@ -200,3 +200,14 @@ More detail, including the browser-only upload route, is in [FIRST-BUILD.md](FIR
 | Android Gradle sync fails | In Android Studio use File, Sync Project with Gradle Files; make sure the JDK that Android Studio bundles is selected. |
 
 Your planner data lives in the app's own storage on your device; uninstalling the program or clearing the app's data removes it.
+
+
+## Sync your PC and your phone
+
+1. Install the PC program and the Android app (or build them) and open both.
+2. On the PC click **Sync**. Pick **Same Wi-Fi** (simplest), **Over the internet** or **Both**. For the internet options you need a relay address: follow `relay/README.md` once (about 10 minutes, free).
+3. Click **Show QR code**. The first time, Windows asks if Study Desk may use private networks: click **Allow** (Mac: **Allow** for incoming connections).
+4. On the phone tap **Sync**, then **Scan the code**, and point the camera at the QR code. Allow the camera when the phone asks. If the camera does not work, open **Cannot scan?**, copy the text under the QR code on the PC, and paste it on the phone.
+5. Done. Keep both apps open to see changes arrive within a few seconds. If you change networks, the phone looks for the PC again by itself.
+
+If the phone says it cannot find the PC: both must be on the same Wi-Fi, the PC program must be open, and some school or guest Wi-Fi blocks devices from seeing each other. Use **Over the internet** there. To stop syncing, click **Forget this connection** on either device.

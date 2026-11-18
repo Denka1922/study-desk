@@ -103,3 +103,18 @@ Do not send any API key or keystore password.
 - [ ] I6. The token counter appears. Compare its numbers with the tool's own usage numbers if it shows any (CLI numbers are estimates and say "about").
 - [ ] I7. Online key: Use an online key instead still works as before (key, test, save, build a course).
 - [ ] I8. Run the manual GitHub run **Verify AI catalog** once (see `FIRST-BUILD.md`) and tell me the result.
+
+## J. Sync (PC program and Android app; needs a real Android phone)
+
+- [ ] J1. PC: Sync > Same Wi-Fi > Show QR code. Windows asks about private networks once: Allow. A QR code appears.
+- [ ] J2. Phone (same Wi-Fi): Sync > Scan the code. The camera permission is asked; allow it. It pairs and says Synced within a few seconds.
+- [ ] J3. Add an exam on the PC: it appears on the phone within about 10 seconds. Add a to-do on the phone: it appears on the PC.
+- [ ] J4. Delete an item on one device: it disappears on the other. Edit the same item on both, a minute apart: the newer edit wins.
+- [ ] J5. Close the PC program, change something on the phone, open the PC program again: the change arrives.
+- [ ] J6. Turn Wi-Fi off on the phone: the phone says it cannot find the PC and nothing breaks. Turn it on: it syncs again by itself.
+- [ ] J7. Restart the router (or move the PC to another Wi-Fi): the phone finds the PC again without scanning.
+- [ ] J8. Camera denied: the window says so and the paste option still pairs.
+- [ ] J9. Forget this connection on the PC: the phone can no longer sync (it says it cannot find the PC). Pair again with the new code.
+- [ ] J10. AI Tutor: build a course on the PC; it shows up on the phone. The AI key you typed on the PC is NOT on the phone.
+- [ ] J11. Relay: deploy it with `relay/README.md`, choose Over the internet, pair, turn the phone's Wi-Fi off (mobile data): changes still arrive within about 30 seconds.
+- [ ] J12. Both: works at home on Wi-Fi, and keeps working away from home.

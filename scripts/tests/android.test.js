@@ -31,13 +31,23 @@ test('mobile package.json pins Capacitor 8.6.0 and Node 22', () => {
   assert.deepStrictEqual(bad.map(b => b[0]), []);
 });
 
-test('manifest asks only for internet, with backup and cleartext off', () => {
+test('manifest asks only for internet and the camera, with backup off', () => {
   const m = read(MAN);
   const perms = [...m.matchAll(/<uses-permission[^>]*android:name="([^"]+)"/g)].map(x => x[1]);
-  assert.deepStrictEqual(perms, ['android.permission.INTERNET']);
-  assert.ok(!/<uses-permission-sdk-23|<uses-feature/.test(m));
+  assert.deepStrictEqual(perms, ['android.permission.INTERNET', 'android.permission.CAMERA']);
+  assert.ok(!/<uses-permission-sdk-23/.test(m));
+  assert.deepStrictEqual([...m.matchAll(/<uses-feature[^>]*>/g)].map(x => x[0].replace(/\s+/g, ' ')), ['<uses-feature android:name="android.hardware.camera" android:required="false" />']);
   assert.match(m, /android:allowBackup="false"/);
-  assert.match(m, /android:usesCleartextTraffic="false"/);
+});
+
+test('plain HTTP is allowed only because sync needs the local network, and the page itself still cannot use it', () => {
+  // Sync talks to the PC (http://192.168.x.x) through the native HTTP plugin; every body is AES-GCM sealed (SYNC.md).
+  // The page's own network rules stay closed: no mixed content, and its content policy names only the three AI hosts over https.
+  assert.match(read(MAN), /android:usesCleartextTraffic="true"/);
+  assert.strictEqual(JSON.parse(read('mobile/capacitor.config.json')).android.allowMixedContent, false);
+  const csp = read('app/index.html').match(/Content-Security-Policy" content="([^"]+)"/)[1];
+  const connect = csp.match(/connect-src ([^;]+)/)[1].split(' ');
+  assert.deepStrictEqual(connect, ['https://api.anthropic.com', 'https://api.openai.com', 'https://generativelanguage.googleapis.com']);
 });
 
 test('application id, name and version match the config and version.json', () => {
