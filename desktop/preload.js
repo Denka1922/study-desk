@@ -36,4 +36,37 @@ const ai = {
   cancelChat: () => call('cancelChat'),
 };
 
-contextBridge.exposeInMainWorld('studyDesk', { ai });
+// Sync with the phone. The page keeps the data and does the merging; this side only carries sealed messages (see SYNC.md).
+const SP = 'study-desk:sync:';
+const scall = (name, arg) => ipcRenderer.invoke(SP + name, arg).then(r => {
+  if (r && r.ok) return r.value;
+  return Promise.reject({ message: (r && r.error && typeof r.error.message === 'string') ? r.error.message : 'Sync did not work.' });
+});
+const sync = {
+  version: 1,
+  start: a => scall('start', a),
+  stop: () => scall('stop'),
+  forget: () => scall('forget'),
+  publish: a => scall('publish', a),
+  status: () => scall('status'),
+  // cb(msg) must return a promise of {rev, doc}; the answer is sent back to the main process.
+  onRequest: cb => {
+    if (typeof cb !== 'function') throw new TypeError('onRequest needs a function');
+    const handler = (event, p) => {
+      if (!p || !Number.isInteger(p.id)) return;
+      Promise.resolve().then(() => cb(p.msg)).then(
+        v => ipcRenderer.invoke(SP + 'reply', { id: p.id, ok: true, value: v }).catch(() => {}),
+        () => ipcRenderer.invoke(SP + 'reply', { id: p.id, ok: false }).catch(() => {}));
+    };
+    ipcRenderer.on(SP + 'request', handler);
+    return () => ipcRenderer.removeListener(SP + 'request', handler);
+  },
+  onStatus: cb => {
+    if (typeof cb !== 'function') throw new TypeError('onStatus needs a function');
+    const handler = (event, payload) => cb(payload);
+    ipcRenderer.on(SP + 'status:event', handler);
+    return () => ipcRenderer.removeListener(SP + 'status:event', handler);
+  },
+};
+
+contextBridge.exposeInMainWorld('studyDesk', { ai, sync });

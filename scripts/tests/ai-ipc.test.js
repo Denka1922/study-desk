@@ -115,10 +115,10 @@ function loadPreload() {
   return { exposed, invoked, listeners, electron };
 }
 
-test('preload exposes exactly studyDesk.ai with the documented methods and never ipcRenderer', async () => {
+test('preload exposes exactly studyDesk.ai and studyDesk.sync with the documented methods and never ipcRenderer', async () => {
   const p = loadPreload();
   assert.strictEqual(p.exposed.length, 1); assert.strictEqual(p.exposed[0][0], 'studyDesk');
-  const root = p.exposed[0][1]; assert.deepStrictEqual(Object.keys(root), ['ai']);
+  const root = p.exposed[0][1]; assert.deepStrictEqual(Object.keys(root), ['ai', 'sync']);
   const ai = root.ai;
   assert.deepStrictEqual(Object.keys(ai).sort(), ['chat', 'cancelChat', 'cli', 'getHardware', 'local', 'recommend', 'version'].sort());
   assert.strictEqual(ai.version, 1);
@@ -128,7 +128,7 @@ test('preload exposes exactly studyDesk.ai with the documented methods and never
   const calls = [['getHardware'], ['recommend', {}], ['chat', {}], ['cancelChat']];
   for (const [n, a] of calls) await ai[n](a);
   await ai.local.status(); await ai.local.install({}); await ai.local.cancel(); await ai.local.remove({}); await ai.local.removeAll(); await ai.local.start({}); await ai.local.stop(); await ai.cli.detect();
-  assert.deepStrictEqual(p.invoked.map(x => x[0]).sort(), [...AI_CHANNELS].sort());
+  assert.deepStrictEqual(p.invoked.map(x => x[0]).sort(), [...AI_CHANNELS].sort(), 'calling every AI method touches only AI channels');
 });
 
 test('preload unwraps {ok,value} and rejects with a plain {kind, message}', async () => {

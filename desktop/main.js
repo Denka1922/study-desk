@@ -12,9 +12,11 @@ const { chatLocal } = require('./ai/localchat');
 const { runCli, detectTools } = require('./ai/cli');
 const { createAiService } = require('./ai/service');
 const { registerAiIpc, createProgressSender, AI_PROGRESS_CHANNEL } = require('./ai/ipc');
+const { registerSyncIpc } = require('./sync/ipc');
 
 let win = null;
 let aiService = null;
+let syncIpc = null;
 
 function appFile() {
   return resolveAppFile({ isPackaged: app.isPackaged, resourcesPath: process.resourcesPath, baseDir: __dirname });
@@ -45,8 +47,14 @@ function startAiService() {
   registerAiIpc({ ipcMain, service: aiService, appFileUrl: pathToFileURL(appFile()).href });
 }
 
+// Sync with the phone: the door stays closed until the user pairs a device in the app.
+function startSync() {
+  syncIpc = registerSyncIpc({ ipcMain, getWindow: () => win, appFileUrl: pathToFileURL(appFile()).href });
+}
+
 function stopAi() {
   if (aiService) Promise.resolve(aiService.shutdown()).catch(() => {});
+  if (syncIpc) Promise.resolve(syncIpc.shutdown()).catch(() => {});
 }
 
 function createWindow() {
@@ -95,6 +103,7 @@ if (!app.requestSingleInstanceLock()) {
       ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }])
       : null);
     startAiService(); // IPC is ready before the page loads
+    startSync();
     createWindow();
   });
 }

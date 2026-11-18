@@ -1,0 +1,9 @@
+name = "study-desk-relay"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Create the storage once with:  wrangler kv namespace create ROOMS
+# then paste the id it prints here.
+[[kv_namespaces]]
+binding = "ROOMS"
+id = "REPLACE_WITH_YOUR_KV_ID"

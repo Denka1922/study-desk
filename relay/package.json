@@ -1,0 +1,6 @@
+{
+  "name": "study-desk-relay",
+  "private": true,
+  "type": "module",
+  "description": "Tiny encrypted-blob relay for Study Desk sync (Cloudflare Worker). See README.md."
+}

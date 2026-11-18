@@ -148,7 +148,8 @@ test('the AI service is created once, its IPC is registered before the page load
   const { AI_CHANNELS } = require('../../desktop/ai/ipc');
   const log = await loadMain();
   assert.strictEqual(log.serviceCreated, 1);
-  assert.deepStrictEqual([...log.ipcChannels].sort(), [...AI_CHANNELS].sort());
+  const { SYNC_CHANNELS } = require('../../desktop/sync/ipc');
+  assert.deepStrictEqual([...log.ipcChannels].sort(), [...AI_CHANNELS, ...SYNC_CHANNELS].sort());
   assert.ok(log.order.indexOf('ipc') < log.order.indexOf('loadFile'), 'IPC first, then the page');
   assert.strictEqual(log.serviceDeps.dataDir, path.join(path.sep, 'fake-user-data', 'userData', 'ai'));
   assert.ok(typeof log.serviceDeps.hardwareReader === 'function' && log.serviceDeps.catalog && log.serviceDeps.engine && log.serviceDeps.runCli && log.serviceDeps.chatLocal && log.serviceDeps.download && log.serviceDeps.engineInstaller && log.serviceDeps.detectTools);

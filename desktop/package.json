@@ -26,6 +26,7 @@
       "security.js",
       "ai/**/*",
       "!ai/tools/**",
+      "sync/**/*",
       "package.json"
     ],
     "extraResources": [
