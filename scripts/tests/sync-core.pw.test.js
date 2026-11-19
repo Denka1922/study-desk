@@ -174,3 +174,17 @@ test('AI Tutor courses sync too, come out identical on the other device, and the
   assert.ok(!JSON.stringify(await A.evaluate(() => syncDoc())).includes('not-a-real-key'));
   await A.context().close(); await B.context().close();
 });
+
+test('on a phone-sized screen the Sync button is fully visible at the top, not pushed off the edge', async () => {
+  if (!browser) browser = await loadPlaywright().chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, isMobile: true });
+  const p = await ctx.newPage();
+  await p.addInitScript(() => { window.Capacitor = { isNativePlatform: () => true, Plugins: { CapacitorHttp: { request: async () => { throw new Error('offline'); } } } }; });
+  await p.goto(PG.url); await p.waitForSelector('.glance');
+  const r = await p.evaluate(() => {
+    const b = [...document.querySelectorAll('[data-sync-open]')].find(x => x.getBoundingClientRect().width > 0).getBoundingClientRect();
+    return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, vw: innerWidth, vh: innerHeight };
+  });
+  assert.ok(r.left >= 0 && r.right <= r.vw && r.top >= 0 && r.bottom <= r.vh / 3, JSON.stringify(r));
+  await ctx.close();
+});
