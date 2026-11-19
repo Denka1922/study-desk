@@ -3,6 +3,16 @@
 A personal student planner: calendar, exams and grades, deadlines, to-dos, shortcuts and an AI Tutor.
 Your planner data stays on your own device.
 
+**[Download](https://denka1922.github.io/study-desk/)** · [Install and build guide](INSTALLATION.md) · [How sync works](SYNC.md) · [Test checklist](TEST-CHECKLIST.md)
+
+[![The Study Desk overview with the next exam, assignments due this week and upcoming events](site/shots/overview-light.webp)](https://denka1922.github.io/study-desk/)
+
+| Calendar | To-Do | Grades |
+|---|---|---|
+| ![The calendar with exams, assignments and projects in different colors](site/shots/calendar-light.webp) | ![The to-do list with due dates](site/shots/todo-light.webp) | ![Grades per course with averages](site/shots/grades-light.webp) |
+
+The pictures show the example entries the app starts with.
+
 Study Desk is one web page (`app/index.html`) that is packaged three ways:
 
 | Platform | How it is packaged | Where it comes from |

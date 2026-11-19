@@ -48,7 +48,7 @@ Text `SDSYNC1.` + base64url (no padding) of this UTF-8 JSON:
 
 ```json
 { "s": "<32 random bytes, base64url>", "m": "wifi|net|both",
-  "p": 47821, "a": ["192.168.1.20"], "r": "https://sd-relay.example.workers.dev", "n": "Deniz PC" }
+  "p": 47821, "a": ["192.168.1.20"], "r": "https://sd-relay.example.workers.dev", "n": "My PC" }
 ```
 
 `p` and `a` (port and the PC's private IPv4 addresses) appear for `wifi`/`both`; `r` (relay base URL, https only) for `net`/`both`.

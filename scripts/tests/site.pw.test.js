@@ -52,6 +52,11 @@ async function open(browser, { api = { status: 200, body: release() }, url = PAG
       return route.fulfill({ status: api.status, contentType: 'application/json',
         body: typeof api.body === 'string' ? api.body : JSON.stringify(api.body) });
     }
+    const asset = /^https:\/\/alice\.github\.io\/study-desk\/((?:shots\/[a-z0-9-]+\.webp)|favicon\.svg)$/.exec(u);
+    if (asset) {
+      return route.fulfill({ status: 200, contentType: asset[1].endsWith('.svg') ? 'image/svg+xml' : 'image/webp',
+        body: require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'site', asset[1])) });
+    }
     if (u.startsWith('https://alice.github.io/') || u.startsWith('https://example.com/')) {
       return route.fulfill({ status: 200, contentType: 'text/html', body: pageSource(play) });
     }
@@ -132,7 +137,9 @@ test('hostile and odd asset data (Review Focus 5)', () => withBrowser(async b =>
     { name: 'Study-Desk-1.2.0-portable.exe', browser_download_url: DL + 'p.exe' },
   ] });
   const { page, errs } = await open(b, { api: { status: 200, body: r }, width: 360 });
-  assert.strictEqual(await page.locator('img').count(), 0);
+  // the page has its own pictures now; what must never appear is an image made from the hostile file name
+  assert.strictEqual(await page.locator('img[src="x"], img[onerror]').count(), 0);
+  assert.strictEqual(await page.locator('#file-list img, #btns img').count(), 0);
   assert.strictEqual(await page.evaluate(() => window.__x), undefined);
   assert.ok((await page.locator('#file-list').innerText()).includes('<img src=x'));
   assert.strictEqual(await href(page, '#btn-installer'), DL + 'x.exe', 'first matching asset wins');
@@ -206,10 +213,16 @@ test('layout at phone, tablet and desktop widths, light and dark', () => withBro
   assert.ok(lum(colors[0]) < 0.2 && lum(colors[1]) > 0.6, JSON.stringify(colors));
 }));
 
-test('keyboard: Tab reaches the selected tab first, then the installer button, then the portable one', () => withBrowser(async b => {
+test('keyboard: Tab goes through the top links and big button, then the selected tab, the installer button and the portable one', () => withBrowser(async b => {
   const { page } = await open(b);
-  await page.keyboard.press('Tab');
-  assert.strictEqual(await page.evaluate(() => document.activeElement.id), 'tab-windows');
+  const seen = [];
+  for (let i = 0; i < 30 && !seen.includes('tab-windows'); i++) {
+    await page.keyboard.press('Tab');
+    seen.push(await page.evaluate(() => document.activeElement.id || document.activeElement.textContent.trim().slice(0, 20)));
+  }
+  assert.ok(seen.includes('hero-dl'), 'the big download button can be reached: ' + seen.join(' > '));
+  assert.ok(seen.indexOf('hero-dl') < seen.indexOf('tab-windows'));
+  assert.strictEqual(seen[seen.length - 1], 'tab-windows');
   await page.keyboard.press('Tab');
   assert.strictEqual(await page.evaluate(() => document.activeElement.id), 'btn-installer');
   await page.keyboard.press('Tab');
@@ -296,4 +309,58 @@ test('Mac only release: not "still being built"', () => withBrowser(async b => {
   assert.doesNotMatch(await page.locator('#state').innerText(), /still being built/i);
   await page.click('#tab-windows');
   assert.match(await page.locator('#windows').innerText(), /No Windows files in this version yet/);
+}));
+
+test('the big button at the top matches the visitor and links to a safe file', () => withBrowser(async b => {
+  const win = await open(b);
+  assert.strictEqual((await win.page.locator('#hero-dl').innerText()).trim(), 'Download for Windows');
+  assert.strictEqual(await href(win.page, '#hero-dl'), DL + 'Study-Desk-Setup-1.2.0.exe');
+  assert.match(await win.page.locator('#hero-meta').innerText(), /Version 1\.2\.0 · November 10, 2026/);
+  const failed = await open(b, { api: { status: 500, body: {} } });
+  assert.strictEqual(await href(failed.page, '#hero-dl'), '#download');
+  assert.strictEqual((await failed.page.locator('#hero-dl').innerText()).trim(), 'Download for Windows');
+  const mac = await open(b, { ua: MAC_UA });
+  assert.strictEqual((await mac.page.locator('#hero-dl').innerText()).trim(), 'Download for Mac');
+  assert.strictEqual(await href(mac.page, '#hero-dl'), '#download');
+  const and = await open(b, { ua: ANDROID_UA });
+  assert.strictEqual((await and.page.locator('#hero-dl').innerText()).trim(), 'Get the Android app');
+  assert.strictEqual(await href(and.page, '#hero-dl'), '#download');
+  const good = 'https://play.google.com/store/apps/details?id=app.studydesk.planner';
+  const play = await open(b, { ua: ANDROID_UA, play: good });
+  assert.strictEqual(await href(play.page, '#hero-dl'), good);
+  // a hostile asset name or address must never reach the big button
+  const evil = release({ assets: [{ name: 'Study-Desk-Setup-9.exe', size: 1, browser_download_url: 'https://evil.example/Study-Desk-Setup-9.exe' }] });
+  const bad = await open(b, { api: { status: 200, body: evil } });
+  assert.strictEqual(await href(bad.page, '#hero-dl'), '#download');
+}));
+
+test('the app pictures load in light and dark, and project links point at this repository', () => withBrowser(async b => {
+  for (const scheme of ['light', 'dark']) {
+    const { page, errs } = await open(b, { scheme });
+    await page.evaluate(() => { for (const i of document.images) i.loading = 'eager'; });
+    await page.waitForFunction(() => [...document.images].every(i => i.complete));
+    const bad = await page.evaluate(() => [...document.images].filter(i => !i.naturalWidth).map(i => i.currentSrc || i.src));
+    assert.deepStrictEqual(bad, [], scheme);
+    assert.ok(await page.evaluate(() => document.images.length >= 5));
+    assert.ok(await page.evaluate(() => [...document.images].every(i => i.alt.length > 10)), 'alt text');
+    assert.deepStrictEqual(errs, [], scheme);
+  }
+  const { page } = await open(b);
+  const links = await page.locator('a[data-repo]').evaluateAll(a => a.map(x => [x.href, x.hidden]));
+  assert.deepStrictEqual(links.map(l => l[1]), [false, false, false, false]);
+  for (const [h] of links) assert.match(h, /^https:\/\/github\.com\/alice\/study-desk(\/|$)/, h);
+  const root = await open(b, { url: 'https://alice.github.io/' });
+  assert.deepStrictEqual(await root.page.locator('a[data-repo]').evaluateAll(a => a.map(x => x.hidden)), [true, true, true, true]);
+}));
+
+test('the page has one main heading, labelled sections and no sideways scrolling at 320 px', () => withBrowser(async b => {
+  const { page } = await open(b, { width: 320 });
+  assert.strictEqual(await page.locator('h1').count(), 1);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  const unlabelled = await page.locator('main section[aria-labelledby]').evaluateAll(s => s.filter(x => !document.getElementById(x.getAttribute('aria-labelledby'))).length);
+  assert.strictEqual(unlabelled, 0);
+  // the questions open and close with the keyboard
+  await page.locator('#faq summary').first().focus();
+  await page.keyboard.press('Enter');
+  assert.ok(await page.locator('#faq details').first().evaluate(d => d.open));
 }));

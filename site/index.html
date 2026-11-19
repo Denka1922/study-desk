@@ -3,124 +3,434 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0dZpz6kjtLPoxMPe90uR6fw1m/o6BP51S1Xuz7dxu+s='; style-src 'sha256-tp46VuiN/XVZeBy2MK6Wj4NZWI47a6XaV4w+5jyC79w='; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
-<title>Study Desk: download</title>
-<meta name="description" content="Download Study Desk, a personal student planner, for Windows, Mac and Android.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5wLKdKimRWLjWJYm2KlEXAsJQimeT9KfqE9fuwCnjwQ='; style-src 'sha256-DNDkOun6W4Kk/u9lQS15u1ctrZ559gcT+az8xb+iS+Q='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<title>Study Desk: a planner for students</title>
+<meta name="description" content="Study Desk is a free student planner for Windows, Mac and Android: exams, deadlines, to-dos, grades, an AI tutor, and sync between your phone and PC.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
 :root{
   color-scheme:light;
-  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#171A23; --muted:#5F6B85; --line:#E0E4EC;
-  --accent:#2540D9; --accent-ink:#FFFFFF; --accent-soft:#E8ECFD; --warn:#9A4A08; --warn-soft:#FDF0E3;
-  --f-body:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#171A23; --muted:#555F7A; --line:#DFE3EC;
+  --accent:#2540D9; --accent-ink:#FFFFFF; --accent-soft:#E8ECFD;
+  --exam:#B8205A; --exam-soft:#FBE6EE; --project:#0B7253; --project-soft:#DCF2E9;
+  --warn:#9A4A08; --warn-soft:#FDF0E3;
+  --shadow:0 1px 2px rgba(23,26,35,.06),0 18px 40px -12px rgba(23,26,35,.22);
+  --f-body:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Roboto,sans-serif;
+  --f-head:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Roboto,sans-serif;
   --f-mono:ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root{
     color-scheme:dark;
-    --bg:#11141B; --surface:#1A1E28; --ink:#E8EBF2; --muted:#98A2B8; --line:#2A303D;
-    --accent:#8393FF; --accent-ink:#0E1220; --accent-soft:#232A4A; --warn:#F0B06A; --warn-soft:#2D2416;
+    --bg:#0F121A; --surface:#181C27; --ink:#E8EBF2; --muted:#9BA6BD; --line:#2A3040;
+    --accent:#8393FF; --accent-ink:#0E1220; --accent-soft:#232A4A;
+    --exam:#FF8FB5; --exam-soft:#3A1E2B; --project:#6FDDB3; --project-soft:#17332A;
+    --warn:#F0B06A; --warn-soft:#2D2416;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -12px rgba(0,0,0,.6);
   }
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);padding:32px 16px 48px}
-main{max-width:720px;margin:0 auto;display:grid;gap:16px}
-header{display:flex;gap:14px;align-items:center;margin-bottom:8px}
-header svg{width:56px;height:56px;flex:none}
-h1{font-size:1.75rem;line-height:1.2;margin:0}
-h2{font-size:1.1rem;margin:0 0 8px}
-header p{margin:2px 0 0;color:var(--muted)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
-.card p{margin:0 0 10px}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--f-body);-webkit-text-size-adjust:100%}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--f-head);margin:0;letter-spacing:-.02em}
+h1{font-size:clamp(2.2rem,4.6vw,3.35rem);line-height:1.06;font-weight:700;letter-spacing:-.03em}
+h2{font-size:clamp(1.6rem,3vw,2.15rem);line-height:1.15;font-weight:700}
+h3{font-size:1.05rem;line-height:1.3;font-weight:650}
+p{margin:0 0 12px}
+a{color:var(--accent)}
+img{display:block;max-width:100%;height:auto}
+ul{margin:8px 0 0;padding-left:20px}
+li{overflow-wrap:anywhere}
 .muted{color:var(--muted)}
 .meta{font-family:var(--f-mono);font-size:.9rem}
+a:focus-visible,.btn:focus-visible,.tab:focus-visible,summary:focus-visible{outline:3px solid var(--ink);outline-offset:3px;border-radius:6px}
+[hidden]{display:none!important}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:20px;min-height:60px}
+.brand{display:flex;align-items:center;gap:10px;font:650 1.05rem var(--f-head);color:var(--ink);text-decoration:none;margin-right:auto}
+.brand svg{width:30px;height:30px;flex:none}
+.bar nav{display:flex;align-items:center;gap:22px}
+.bar nav a{color:var(--muted);text-decoration:none;font-size:.95rem;font-weight:500}
+.bar nav a:hover{color:var(--ink)}
+.bar nav a.cta{color:var(--accent-ink);background:var(--accent);padding:7px 14px;border-radius:9px;font-weight:600}
+.bar nav a.cta:hover{color:var(--accent-ink);opacity:.92}
+
+/* buttons */
 .btns{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent)}
 .btn.alt{background:transparent;color:var(--accent)}
-a{color:var(--accent)}
-a:focus-visible,.btn:focus-visible,.tab:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
-ul{margin:8px 0 0;padding-left:20px}
+.btn.big{min-height:52px;padding:12px 26px;font-size:1.05rem;border-radius:12px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center;padding-block:64px 40px}
+.hero-text{min-width:0}
+.hero-text .lead{font-size:1.15rem;line-height:1.6;color:var(--muted);max-width:34em;margin:20px 0 28px}
+.hero-text .btns{margin:0 0 14px;align-items:center;gap:10px 22px}
+.textlink{font-weight:600;text-decoration:none;padding:10px 2px}
+.textlink:hover{text-decoration:underline}
+.hero-meta{font-size:.92rem;color:var(--muted);margin:0}
+.stage{position:relative;min-width:0;padding-bottom:36px}
+.win{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.win img{width:100%}
+.phone{position:absolute;right:-6px;bottom:0;width:25%;border:5px solid var(--ink);border-radius:22px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.phone img{width:100%}
+
+/* feature rows */
+.rows{padding-block:24px 8px}
+.row{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:56px;align-items:center;padding:56px 0;border-top:1px solid var(--line)}
+.row.flip{grid-template-columns:minmax(0,7fr) minmax(0,4fr)}
+.row.flip .copy{order:2}
+.copy{min-width:0}
+.copy h2{margin-bottom:14px}
+.copy p,.copy li{max-width:34em}
+.copy ul{margin-top:12px}
+.copy .chips+.fine{margin-top:14px}
+.copy li{margin-bottom:6px}
+.shot{min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.chips li{margin:0;padding:3px 12px;border-radius:99px;font-size:.88rem;font-weight:600}
+.chip-exam{background:var(--exam-soft);color:var(--exam)}
+.chip-assign{background:var(--accent-soft);color:var(--accent)}
+.chip-project{background:var(--project-soft);color:var(--project)}
+
+/* extras */
+.extras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--line);padding:40px 0 56px}
+.extras div{padding:0 28px;border-left:1px solid var(--line)}
+.extras div:first-child{padding-left:0;border-left:0}
+.extras h3{margin-bottom:6px}
+.extras p{color:var(--muted);margin:0}
+
+/* AI tutor and sync bands */
+.band{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;padding-block:72px;align-items:start}
+.split h2{margin-bottom:14px}
+.split p{max-width:34em}
+.flow{list-style:none;margin:20px 0 0;padding:0;counter-reset:step}
+.flow li{counter-increment:step;position:relative;padding:0 0 18px 48px;margin:0}
+.flow li::before{content:counter(step);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:700 .95rem/32px var(--f-head);text-align:center}
+.flow li::after{content:"";position:absolute;left:15px;top:36px;bottom:4px;width:2px;background:var(--line)}
+.flow li:last-child::after{display:none}
+.flow b{display:block;font-weight:650}
+.flow span{color:var(--muted)}
+.facts{display:grid;gap:0;margin:0;border:1px solid var(--line);border-radius:14px;background:var(--bg);overflow:hidden}
+.facts div{padding:16px 20px;border-top:1px solid var(--line)}
+.facts div:first-child{border-top:0}
+.facts dt{font-weight:650;margin:0 0 2px}
+.facts dd{margin:0;color:var(--muted)}
+.fine{font-size:.92rem;color:var(--muted)}
+
+/* download */
+.dl{padding-block:72px 24px}
+.dl h2{margin-bottom:8px}
+.dl .sub{color:var(--muted);margin-bottom:24px;max-width:36em}
+.grid{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.card h2,.card h3{font-size:1.1rem;margin:0 0 8px;font-weight:650}
+.card p{margin:0 0 10px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap}
 .tab{flex:1 1 0;min-height:44px;padding:10px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;background:var(--surface);color:var(--ink);border:2px solid var(--line)}
 .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .steps{margin:8px 0 0;padding-left:20px}
 .steps li{margin-bottom:4px}
 #file-list li,#mac-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
-li{overflow-wrap:anywhere}
 .note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
 .note strong{color:var(--warn)}
-footer{color:var(--muted);font-size:.9rem}
-[hidden]{display:none!important}
-@media (max-width:420px){.btn{width:100%}}
+
+/* questions */
+.faq{padding-block:56px 64px}
+.faq h2{margin-bottom:20px}
+.faq details{border-top:1px solid var(--line);padding:2px 0}
+.faq details:last-of-type{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:400 1.4rem/1 var(--f-body);color:var(--muted);flex:none}
+.faq details[open] summary::after{content:"\2212"}
+.faq details p{color:var(--muted);max-width:44em;margin:0 0 16px}
+
+footer{border-top:1px solid var(--line);padding:32px 0 48px;color:var(--muted);font-size:.92rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between}
+footer p{margin:0;max-width:34em}
+footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:minmax(0,1fr);gap:36px;padding-block:40px 24px}
+  .row,.row.flip{grid-template-columns:minmax(0,1fr);gap:28px;padding:40px 0}
+  .row.flip .copy{order:0}
+  .split{grid-template-columns:minmax(0,1fr);gap:32px;padding-block:48px}
+  .extras{grid-template-columns:minmax(0,1fr);gap:24px}
+  .extras div,.extras div:first-child{padding:0;border-left:0}
+  .phone{right:8px;width:24%}
+}
+@media (max-width:720px){
+  .bar nav a:not(.cta){display:none}
+}
+@media (max-width:420px){.btn{width:100%}.bar nav a.cta{width:auto}}
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <svg viewBox="0 0 1024 1024" aria-hidden="true" focusable="false"><rect width="1024" height="1024" rx="224" fill="#2540D9"/><g transform="translate(512 512)"><path d="M-330 -190 Q-150 -240 0 -150 L0 250 Q-150 170 -330 220 Z" fill="#fff"/><path d="M330 -190 Q150 -240 0 -150 L0 250 Q150 170 330 220 Z" fill="#E8ECFD"/><path d="M-130 20 L-50 100 L120 -80" fill="none" stroke="#2540D9" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
-    <div>
-      <h1>Study Desk</h1>
-      <p>Your calendar, exams, grades, deadlines and to-dos in one place.</p>
-    </div>
-  </header>
+<div class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Study Desk, back to the top">
+      <svg viewBox="0 0 1024 1024" aria-hidden="true" focusable="false"><rect width="1024" height="1024" rx="224" fill="#2540D9"/><g transform="translate(512 512)"><path d="M-330 -190 Q-150 -240 0 -150 L0 250 Q-150 170 -330 220 Z" fill="#fff"/><path d="M330 -190 Q150 -240 0 -150 L0 250 Q150 170 330 220 Z" fill="#E8ECFD"/><path d="M-130 20 L-50 100 L120 -80" fill="none" stroke="#2540D9" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+      Study Desk
+    </a>
+    <nav aria-label="Page sections">
+      <a href="#features">What's inside</a>
+      <a href="#tutor">AI Tutor</a>
+      <a href="#sync">Sync</a>
+      <a href="#faq">Questions</a>
+      <a class="cta" href="#download">Download</a>
+    </nav>
+  </div>
+</div>
 
-  <section class="card" id="latest" aria-labelledby="latest-h">
-    <h2 id="latest-h">Latest version</h2>
-    <div id="state" data-state="loading" aria-live="polite">
-      <p id="msg-loading" class="muted">Checking the latest version…</p>
-      <p id="msg-none" hidden>No version has been published yet.</p>
-      <p id="msg-error" hidden>Could not load the latest version from GitHub (it may be busy or limiting requests). <span id="error-link"></span></p>
-      <div id="loaded" hidden>
-        <p class="meta">Version <strong id="version"></strong> · <span id="date"></span></p>
-        <p id="msg-pending" class="muted" hidden>The files are still being built. Try again in a few minutes.</p>
+<main id="top">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="hero-h">
+      <div class="hero-text">
+        <h1 id="hero-h">Exams, deadlines and grades on one calendar</h1>
+        <p class="lead">Study Desk is a planner for students. Keep your calendar, to-dos, grades and shortcuts together, learn new topics with an AI tutor, and keep your phone and PC in step.</p>
+        <div class="btns">
+          <a class="btn big" id="hero-dl" href="#download">Download</a>
+          <a class="textlink" href="#features">See what's inside</a>
+        </div>
+        <p class="hero-meta" id="hero-meta">Free and open source. For Windows, Mac and Android.</p>
       </div>
-    </div>
-  </section>
-
-  <div class="tabs" role="tablist" aria-label="Choose your system">
-    <button type="button" class="tab" role="tab" id="tab-windows" aria-controls="windows" aria-selected="true" tabindex="0">Windows</button>
-    <button type="button" class="tab" role="tab" id="tab-mac" aria-controls="mac" aria-selected="false" tabindex="-1">Mac</button>
-    <button type="button" class="tab" role="tab" id="tab-android" aria-controls="android-card" aria-selected="false" tabindex="-1">Android</button>
+      <div class="stage">
+        <div class="win">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="shots/overview-dark.webp">
+            <img src="shots/overview-light.webp" width="1440" height="900" alt="The Study Desk overview: next exam, assignments due this week, upcoming events and pending assignments.">
+          </picture>
+        </div>
+        <div class="phone">
+          <img src="shots/phone-light.webp" width="780" height="1688" alt="Study Desk on a phone, showing the same overview.">
+        </div>
+      </div>
+    </section>
   </div>
 
-  <section class="card" id="windows" role="tabpanel" aria-labelledby="tab-windows">
-    <h2>Windows</h2>
-    <p id="win-empty" class="muted" hidden>No Windows files in this version yet.</p>
-    <div class="btns" id="btns"></div>
-    <ul id="file-list"></ul>
-    <div class="note">
-      <p><strong>Windows may say "unknown publisher".</strong> The program is not signed with a paid certificate yet, so Windows warns about every new program like this.</p>
-      <p>Click <b>More info</b>, then <b>Run anyway</b>. Use the installer for a normal install, or the portable file to run it from any folder without installing.</p>
-      <p>On some new Windows 11 PCs <b>Smart App Control</b> blocks every unsigned program and offers no "Run anyway". It is under Windows Security, App &amp; browser control, and once turned off it cannot be turned back on.</p>
+  <div class="wrap rows" id="features">
+    <section class="row" aria-labelledby="cal-h">
+      <div class="copy">
+        <h2 id="cal-h">See the whole term at a glance</h2>
+        <p>Put exams, assignment deadlines and project schedules on one month view. Open a day to see what is due and edit it in place.</p>
+        <ul class="chips" aria-label="Types of calendar entries">
+          <li class="chip-exam">Exam</li>
+          <li class="chip-assign">Assignment</li>
+          <li class="chip-project">Project</li>
+        </ul>
+        <p class="fine">Each type has its own color, so a heavy week shows up before it arrives.</p>
+      </div>
+      <div class="shot win">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="shots/calendar-dark.webp">
+          <img src="shots/calendar-light.webp" width="1440" height="900" loading="lazy" alt="The calendar page with a month of exams, assignments and projects in different colors.">
+        </picture>
+      </div>
+    </section>
+
+    <section class="row flip" aria-labelledby="todo-h">
+      <div class="copy">
+        <h2 id="todo-h">Know what is still open</h2>
+        <p>Add an assignment with its course and due date, then tick it off when it is done. Overdue work is marked, and every due date also appears on the calendar.</p>
+        <ul>
+          <li>Filter by all, pending or done.</li>
+          <li>See how many days are left at a glance.</li>
+        </ul>
+      </div>
+      <div class="shot win">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="shots/todo-dark.webp">
+          <img src="shots/todo-light.webp" width="1440" height="900" loading="lazy" alt="The to-do page with pending and finished assignments and their due dates.">
+        </picture>
+      </div>
+    </section>
+
+    <section class="row" aria-labelledby="grades-h">
+      <div class="copy">
+        <h2 id="grades-h">Keep track of how you are doing</h2>
+        <p>Record each exam score by course. Study Desk works out your average per course and overall, shows your best result, and reminds you which past exams still need a score.</p>
+      </div>
+      <div class="shot win">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="shots/grades-dark.webp">
+          <img src="shots/grades-light.webp" width="1440" height="900" loading="lazy" alt="The grades page with an overall average, best result and scores for each course.">
+        </picture>
+      </div>
+    </section>
+
+    <div class="extras">
+      <div>
+        <h3>Shortcuts</h3>
+        <p>One-click buttons to the sites you open every day, such as Google Drive, Gmail and Wikipedia.</p>
+      </div>
+      <div>
+        <h3>Light and dark</h3>
+        <p>The theme follows your system, or you can pick one yourself.</p>
+      </div>
+      <div>
+        <h3>Examples to start</h3>
+        <p>The first launch shows example entries so you can see how everything works. Remove them with one button.</p>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <section class="card" id="mac" role="tabpanel" aria-labelledby="tab-mac" hidden>
-    <h2>Mac</h2>
-    <p><b>Which file do I need?</b> Open the Apple menu, then <b>About This Mac</b>. If it says "Chip: Apple M…", choose <b>Apple Silicon</b>. If it says "Processor: Intel…", choose <b>Intel</b>.</p>
-    <p id="mac-empty" class="muted" hidden>No Mac files in this version yet.</p>
-    <div class="btns" id="mac-btns"></div>
-    <ul id="mac-list"></ul>
-    <p class="muted">The .dmg and the .zip hold the same app. Use either one, then drag Study Desk into Applications.</p>
-    <div class="note">
-      <p><strong>The Mac app is not signed by Apple.</strong> macOS blocks it the first time, and you allow it once:</p>
-      <ul class="steps">
-        <li>macOS 15 or newer: open Study Desk, press <b>Done</b> on the warning, then go to System Settings, Privacy &amp; Security, scroll down and press <b>Open Anyway</b>.</li>
-        <li>macOS 14 or older: right-click (or Control-click) Study Desk, choose <b>Open</b>, then <b>Open</b>.</li>
-        <li>If it says the app is "damaged", run <span class="meta">xattr -cr "/Applications/Study Desk.app"</span> once in Terminal and try again.</li>
-      </ul>
+  <div class="band" id="tutor">
+    <div class="wrap split">
+      <div>
+        <h2>Learn a topic, then get tested</h2>
+        <p>The AI Tutor turns a topic into a short course and an exam, so you can study something new without leaving your planner.</p>
+        <ol class="flow">
+          <li><b>Type a topic</b><span>For example, geometry in maths.</span></li>
+          <li><b>Read the course</b><span>Study Desk builds an outline and lessons you can follow in order.</span></li>
+          <li><b>Take the exam</b><span>Answer the questions and see your score. Your courses are saved for later.</span></li>
+        </ol>
+      </div>
+      <dl class="facts">
+        <div>
+          <dt>Use your own key</dt>
+          <dd>Choose Anthropic, OpenAI or Google Gemini. Study Desk has no key of its own, and yours stays on your device.</dd>
+        </div>
+        <div>
+          <dt>Or run it on your computer</dt>
+          <dd>The Windows and Mac programs can use a local model, or a command-line tool you already have.</dd>
+        </div>
+        <div>
+          <dt>The AI service sets the limits</dt>
+          <dd>Prices and usage limits come from the service you pick. Study Desk itself is free.</dd>
+        </div>
+      </dl>
     </div>
-  </section>
+  </div>
 
-  <section class="card" id="android-card" role="tabpanel" aria-labelledby="tab-android" hidden>
-    <h2 id="and-h">Android</h2>
-    <p id="android-text">Android: coming soon on Google Play</p>
-    <p class="muted">When it is published, install it from Google Play like any other app.</p>
-  </section>
+  <div class="wrap split" id="sync">
+    <div>
+      <h2>Keep your phone and PC in step</h2>
+      <p>Open <b>Sync</b> on the PC, choose how the two should find each other, and scan the code with your phone. After that, a change on one device shows up on the other.</p>
+      <p>It brings across your calendar entries, to-dos, shortcuts and saved AI courses. Your AI key and settings never leave the device they are on.</p>
+      <p class="fine">Everything is encrypted with a key that only your two devices hold. The key is in the code you scan.</p>
+    </div>
+    <dl class="facts">
+      <div>
+        <dt>Same Wi-Fi</dt>
+        <dd>No account and nothing to set up. Both apps are open on the same network.</dd>
+      </div>
+      <div>
+        <dt>Over the internet</dt>
+        <dd>Works on mobile data and across networks. You set up a small free relay on your own Cloudflare account once. It stores only an encrypted package.</dd>
+      </div>
+      <div>
+        <dt>Both</dt>
+        <dd>Uses the Wi-Fi at home and the internet when you are away.</dd>
+      </div>
+    </dl>
+  </div>
 
-  <footer>
-    <p>Your planner data stays on your own device. Nothing is sent to us. If you use the AI Tutor, your questions go to the AI service you choose, using your own key; the Windows and Mac programs can also run the AI on your own computer or through a command-line tool you already use.</p>
-  </footer>
+  <div class="wrap dl" id="download">
+    <h2>Download Study Desk</h2>
+    <p class="sub">Pick your system. The files come straight from the latest release on GitHub.</p>
+    <div class="grid">
+      <section class="card" id="latest" aria-labelledby="latest-h">
+        <h3 id="latest-h">Latest version</h3>
+        <div id="state" data-state="loading" aria-live="polite">
+          <p id="msg-loading" class="muted">Checking the latest version…</p>
+          <p id="msg-none" hidden>No version has been published yet.</p>
+          <p id="msg-error" hidden>Could not load the latest version from GitHub (it may be busy or limiting requests). <span id="error-link"></span></p>
+          <div id="loaded" hidden>
+            <p class="meta">Version <strong id="version"></strong> · <span id="date"></span></p>
+            <p id="msg-pending" class="muted" hidden>The files are still being built. Try again in a few minutes.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="tabs" role="tablist" aria-label="Choose your system">
+        <button type="button" class="tab" role="tab" id="tab-windows" aria-controls="windows" aria-selected="true" tabindex="0">Windows</button>
+        <button type="button" class="tab" role="tab" id="tab-mac" aria-controls="mac" aria-selected="false" tabindex="-1">Mac</button>
+        <button type="button" class="tab" role="tab" id="tab-android" aria-controls="android-card" aria-selected="false" tabindex="-1">Android</button>
+      </div>
+
+      <section class="card" id="windows" role="tabpanel" aria-labelledby="tab-windows">
+        <h3>Windows</h3>
+        <p id="win-empty" class="muted" hidden>No Windows files in this version yet.</p>
+        <div class="btns" id="btns"></div>
+        <ul id="file-list"></ul>
+        <div class="note">
+          <p><strong>Windows may say "unknown publisher".</strong> The program is not signed with a paid certificate yet, so Windows warns about every new program like this.</p>
+          <p>Click <b>More info</b>, then <b>Run anyway</b>. Use the installer for a normal install, or the portable file to run it from any folder without installing.</p>
+          <p>On some new Windows 11 PCs <b>Smart App Control</b> blocks every unsigned program and offers no "Run anyway". It is under Windows Security, App &amp; browser control, and once turned off it cannot be turned back on.</p>
+        </div>
+      </section>
+
+      <section class="card" id="mac" role="tabpanel" aria-labelledby="tab-mac" hidden>
+        <h3>Mac</h3>
+        <p><b>Which file do I need?</b> Open the Apple menu, then <b>About This Mac</b>. If it says "Chip: Apple M…", choose <b>Apple Silicon</b>. If it says "Processor: Intel…", choose <b>Intel</b>.</p>
+        <p id="mac-empty" class="muted" hidden>No Mac files in this version yet.</p>
+        <div class="btns" id="mac-btns"></div>
+        <ul id="mac-list"></ul>
+        <p class="muted">The .dmg and the .zip hold the same app. Use either one, then drag Study Desk into Applications.</p>
+        <div class="note">
+          <p><strong>The Mac app is not signed by Apple.</strong> macOS blocks it the first time, and you allow it once:</p>
+          <ul class="steps">
+            <li>macOS 15 or newer: open Study Desk, press <b>Done</b> on the warning, then go to System Settings, Privacy &amp; Security, scroll down and press <b>Open Anyway</b>.</li>
+            <li>macOS 14 or older: right-click (or Control-click) Study Desk, choose <b>Open</b>, then <b>Open</b>.</li>
+            <li>If it says the app is "damaged", run <span class="meta">xattr -cr "/Applications/Study Desk.app"</span> once in Terminal and try again.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card" id="android-card" role="tabpanel" aria-labelledby="tab-android" hidden>
+        <h3 id="and-h">Android</h3>
+        <p id="android-text">Android: coming soon on Google Play</p>
+        <p class="muted">When it is published, install it from Google Play like any other app.</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="wrap faq" id="faq">
+    <h2>Questions</h2>
+    <details>
+      <summary>Where is my planner data kept?</summary>
+      <p>On your own device. Study Desk does not upload your planner to us. If you turn on Sync, your devices pass the data to each other in encrypted form.</p>
+    </details>
+    <details>
+      <summary>Does Study Desk cost anything?</summary>
+      <p>No. The programs are free and the source code is public under the MIT license. If you use the AI Tutor, the AI service you choose may charge for its own use or limit it.</p>
+    </details>
+    <details>
+      <summary>What does the AI service get to see?</summary>
+      <p>Only what the AI Tutor needs for the course you ask for: your topic, the lesson text, and any question or answer you type. It goes to the service you picked, using your own key. Your calendar, to-dos and grades are not part of those requests. With a local model in the Windows or Mac program, it stays on your computer.</p>
+    </details>
+    <details>
+      <summary>Is there an iPhone version?</summary>
+      <p>Not yet. Study Desk is available for Windows, Mac and Android.</p>
+    </details>
+    <details>
+      <summary>My system warns me about the program. Is it safe to open?</summary>
+      <p>The programs are not signed with a paid certificate, so Windows and macOS warn about them. The steps to open them anyway are under each system in the download section above. You can read the source code and check the build on GitHub before you install.</p>
+    </details>
+    <details>
+      <summary>How do I set up Sync over the internet?</summary>
+      <p>You deploy a small relay to a free Cloudflare account once, which takes about ten minutes. Syncing on the same Wi-Fi needs no setup.</p>
+      <p><a href="#download" id="relay-guide" data-repo="/blob/main/relay/README.md" hidden>Open the relay setup guide</a></p>
+    </details>
+  </div>
 </main>
+
+<footer>
+  <div class="wrap">
+    <p>Study Desk is open source under the MIT license. Your planner data stays on your own device.</p>
+    <nav aria-label="Project links">
+      <a href="#download" data-repo="" hidden>Source code</a>
+      <a href="#download" data-repo="/issues" hidden>Report a problem</a>
+      <a href="#download" data-repo="/blob/main/LICENSE" hidden>License</a>
+    </nav>
+  </div>
+</footer>
 <script>
 (function () {
   'use strict';
@@ -131,6 +441,8 @@ footer{color:var(--muted);font-size:.9rem}
 
   const PLAY_ID = 'app.studydesk.planner';
   const $ = id => document.getElementById(id);
+  let firstTab = 'windows';
+  let installerUrl = '';
 
   function setState(s) {
     $('state').dataset.state = s;
@@ -151,6 +463,16 @@ footer{color:var(--muted);font-size:.9rem}
     }
     if (!/^[A-Za-z0-9-]{1,39}$/.test(owner || '') || !/^[A-Za-z0-9._-]{1,100}$/.test(repo || '') || repo === '.' || repo === '..') return null;
     return { owner, repo };
+  }
+
+  // Links to the project on GitHub (source, issues, licence, relay guide). They stay hidden when the repository is not known.
+  function showRepoLinks(repo) {
+    const base = 'https://github.com/' + repo.owner + '/' + repo.repo;
+    for (const a of document.querySelectorAll('a[data-repo]')) {
+      a.href = base + a.getAttribute('data-repo');
+      a.rel = 'noopener';
+      a.hidden = false;
+    }
   }
 
   function safeDownload(u, repo) {
@@ -188,14 +510,29 @@ footer{color:var(--muted);font-size:.9rem}
     $(listId).appendChild(li);
   }
 
+  // The big button at the top: the right download for this visitor's system when there is one, otherwise it scrolls to the downloads.
+  function heroButton() {
+    const a = $('hero-dl');
+    if (firstTab === 'windows') {
+      a.textContent = 'Download for Windows';
+      if (installerUrl) { a.href = installerUrl; a.rel = 'noopener'; }
+    } else if (firstTab === 'mac') {
+      a.textContent = 'Download for Mac';
+    } else {
+      a.textContent = 'Get the Android app';
+    }
+  }
+
   function showLoaded(rel, repo) {
     const tag = typeof rel.tag_name === 'string' ? rel.tag_name.replace(/^v/, '').slice(0, 40) : '';
     const when = typeof rel.published_at === 'string' ? new Date(rel.published_at) : null;
+    const dateText = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     $('version').textContent = tag;
-    $('date').textContent = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    $('date').textContent = dateText;
+    if (tag) $('hero-meta').textContent = 'Version ' + tag + (dateText ? ' · ' + dateText : '') + '. Free and open source.';
     const installer = pick(rel.assets, /^Study-Desk-Setup-.+\.exe$/, repo);
     const portable = pick(rel.assets, /^Study-Desk-.+-portable\.exe$/, repo);
-    if (installer) button('btns', 'file-list', 'btn-installer', 'Download the installer', installer, false);
+    if (installer) { button('btns', 'file-list', 'btn-installer', 'Download the installer', installer, false); installerUrl = installer.url; }
     if (portable) button('btns', 'file-list', 'btn-portable', 'Download the portable version', portable, true);
     const mac = [
       ['btn-mac-arm64', 'Apple Silicon (.dmg)', /^Study-Desk-.+-mac-arm64\.dmg$/, false],
@@ -212,12 +549,14 @@ footer{color:var(--muted);font-size:.9rem}
     $('win-empty').hidden = winCount > 0;
     $('mac-empty').hidden = macCount > 0;
     $('msg-pending').hidden = winCount + macCount > 0;
+    heroButton();
     setState('loaded');
   }
 
   async function load() {
     const repo = repoFromAddress();
     if (!repo) { setState('error'); return; }
+    showRepoLinks(repo);
     const link = document.createElement('a');
     link.id = 'releases-link';
     link.href = 'https://github.com/' + repo.owner + '/' + repo.repo + '/releases/latest';
@@ -259,6 +598,12 @@ footer{color:var(--muted);font-size:.9rem}
     box.className = 'btns';
     box.appendChild(a);
     $('android-card').insertBefore(box, $('android-card').children[2]);
+    // the big button at the top goes straight to Google Play for Android visitors
+    if (firstTab === 'android') {
+      const hero = $('hero-dl');
+      hero.href = x.href;
+      hero.rel = 'noopener';
+    }
   }
 
   const TABS = ['windows', 'mac', 'android'];
@@ -277,10 +622,9 @@ footer{color:var(--muted);font-size:.9rem}
 
   function initTabs() {
     const ua = String(navigator.userAgent || '');
-    let first = 'windows';
-    if (/Android/i.test(ua)) first = 'android';
-    else if (/Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad|iPod/i.test(ua)) first = 'mac';
-    selectTab(first, false);
+    if (/Android/i.test(ua)) firstTab = 'android';
+    else if (/Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad|iPod/i.test(ua)) firstTab = 'mac';
+    selectTab(firstTab, false);
     for (const t of TABS) $('tab-' + t).addEventListener('click', () => selectTab(t, false));
     $('tab-windows').parentNode.addEventListener('keydown', e => {
       const i = TABS.findIndex(t => $('tab-' + t) === document.activeElement);
@@ -298,6 +642,7 @@ footer{color:var(--muted);font-size:.9rem}
 
   initTabs();
   androidCard();
+  heroButton();
   load();
 })();
 </script>
