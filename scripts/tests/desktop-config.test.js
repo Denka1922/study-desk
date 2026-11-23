@@ -39,7 +39,7 @@ test('installer and portable targets, names and shortcuts', () => {
 test('the page is shipped as a resource and only the shell files are packed', () => {
   const b = pkg().build;
   assert.deepStrictEqual(b.extraResources, [{ from: '../app/index.html', to: 'app/index.html' }]);
-  assert.deepStrictEqual([...b.files].sort(), ['!ai/tools/**', 'ai/**/*', 'main.js', 'package.json', 'preload.js', 'security.js', 'sync/**/*']);
+  assert.deepStrictEqual([...b.files].sort(), ['!ai/tools/**', 'ai/**/*', 'main.js', 'package.json', 'preload.js', 'security.js', 'sync/**/*', 'voice/**/*']);
   assert.strictEqual(pkg().main, 'main.js');
 });
 

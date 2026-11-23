@@ -13,6 +13,10 @@ Your planner data stays on your own device.
 
 The pictures show the example entries the app starts with.
 
+The AI Tutor's **Voice tutor**, which reads the lesson and asks you to explain it back:
+
+![The Voice tutor card open on a lesson](site/shots/voice-light.webp)
+
 Study Desk is one web page (`app/index.html`) that is packaged three ways:
 
 | Platform | How it is packaged | Where it comes from |
@@ -32,6 +36,7 @@ See [INSTALLATION.md](INSTALLATION.md) for step-by-step install and build instru
 - **Exams and grades** with averages.
 - **Light and dark themes.**
 - **AI Tutor** that can make a course outline, lessons, practice exams and revision, and answer questions. It has three ways to run (see below).
+- **Voice tutor.** In a lesson, press **Voice tutor**: the tutor writes a short script, reads it out loud, and asks you to explain the topic back in your own words, then answers what you typed. It runs on your computer (see below).
 - **Sync between your PC and your phone.** Scan a QR code once; after that changes on one device appear on the other. Choose **Same Wi-Fi** (no account), **Over the internet** (through a free relay you set up yourself) or **Both**. Everything is encrypted, and your data never goes to any server of ours. How it works: `SYNC.md`.
 - **No account and no server of ours.** Everything is stored on your device; sync goes directly between your devices (or through your own relay).
 
@@ -61,6 +66,25 @@ Left out on purpose because they cannot be used safely in a one-question mode: G
 
 Your API key is stored only on your device. Never share a key, and never commit one to a repository.
 
+## The Voice tutor
+
+Open a lesson and press **Voice tutor**. A small card opens in the corner: press **Start**, listen, then type your explanation in the box and press **Send**. The tutor answers your explanation and asks the next question. **Pause**, **Stop** and **Replay** are on the card; a voice and a speed can be chosen at the bottom.
+
+Where the voice comes from, from least to most setup:
+
+| Voice | Where | Download | Languages |
+|---|---|---|---|
+| **Computer voice** | Everywhere (the voice your system already has) | None | Whatever your system has installed. Some systems' voices use the internet; the card does not control that. |
+| **Kokoro** | Windows and Mac program | About 132 MB, once | English |
+| **Supertonic 3** | Windows and Mac program | About 129 MB, once | 31 languages, including Turkish and English |
+| **VoiceStudio** | Windows and Mac program | None from us | If you already run [VoiceStudio](https://github.com/debpalash/VoiceStudio) on this computer, the card finds it and lists its voices |
+
+The two downloadable voices run on your computer with the open-source [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) engine (Apache-2.0). The script text never leaves the computer when you use them. The AI that writes the script is the one you chose for the Tutor, so that part works as described above. Downloads use the same safety rules as the Local AI: pinned files, a fingerprint check before use, only GitHub, Hugging Face and the npm registry as sources. Spoken lines are remembered in a small cache (at most 150 MB) so a lesson read twice is not made twice. **Remove** on the card deletes a voice.
+
+Why VoiceStudio is not bundled: it is a separate program under the AGPL licence and its default voice files are not free for commercial use, so Study Desk only talks to it over `127.0.0.1` when you run it yourself. Nothing of it is copied into Study Desk.
+
+Not built on purpose: **voice cloning** (copying a real person's voice) needs consent checks and clear labelling that are not designed yet, and **speaking your answer** (microphone input) is the next step; for now you type your explanation.
+
 ## Project layout
 
 | Path | What it is |
@@ -70,6 +94,7 @@ Your API key is stored only on your device. Never share a key, and never commit 
 | `desktop/sync/` | Sync, PC side: the Wi-Fi server, the relay client, encryption. Runs in the main process only and stays closed until you pair a phone. |
 | `relay/` | The small internet relay (a free Cloudflare Worker you deploy yourself). It stores only encrypted data it cannot read. See `relay/README.md`. |
 | `SYNC.md` | How sync works and the exact message formats. |
+| `desktop/voice/` | The Voice tutor, PC side: the voice list, downloads, the worker that makes the sound, the cache and the VoiceStudio link. Main process only; the page only plays the sound it gets back. |
 | `desktop/ai/` | The Local and CLI AI. It runs in the main process only; the page never gets a file path, command or port. |
 | `mobile/` | The Android project (Capacitor). Open `mobile/android` in Android Studio. |
 | `site/` | The download page. |
@@ -106,6 +131,8 @@ Automatic tests cover the page, settings, link rules, version handling, the down
 - the Local and CLI AI on a real Windows PC or Mac. The automatic tests use fakes: no real model download, graphics card or signed-in command-line tool.
 
 **Tested with real models (on a Linux computer at GitHub, processor only):** the real Tutor prompts and the real llama.cpp engine were run with Nemotron 3 Nano 4B, Nemotron 3.5 Bolt, Nemotron Nano 9B v2, Qwen3 4B, Qwen3 8B and GLM-4-9B. They wrote valid outlines, lessons, exams and revisions (also a Turkish lesson for Nemotron 3 Nano 4B, Nemotron 3.5 Bolt and Qwen3 8B). These runs found and fixed real problems: a 5 minute wait limit on slow computers, the engine "thinking" for minutes before answering, a model writing too many lessons, a model writing each question on one line, and models writing only three quiz questions or nine exam questions. **Sync was tested with the real PC code, the real relay code and the real page on both sides, using stand-ins only for the phone's network plug-in and the PC window (fake phone camera showing a real QR code included).** What has **not** been tested yet: a real Android phone (camera, native network call, Android's own network rules), the Windows firewall prompt, a real router, and the relay on a real Cloudflare account. `TEST-CHECKLIST.md` section J lists these steps. **Tested on real Macs (GitHub's Apple Silicon Mac with macOS 26 and Intel Mac with macOS 15, no person at the keyboard):** the workflow **Mac check** builds the Mac app, runs all tests on the Mac, opens the packaged app, checks it reads the Mac chip, downloads the real Mac engine and a real model, starts it and gets a real answer. Run it again any time: Actions, Mac check, Run workflow.
+
+**The Voice tutor was tested with the real engine on a Linux computer:** English with Kokoro and Turkish with Supertonic 3 (the Turkish letters ç ğ ı ö ş ü İ were checked) produced real sound files, and the page was tested with a scripted voice. What has **not** been tested: the downloaded engine on a real Windows PC or Mac (the Mac may ask for the engine to be allowed), listening to every voice, and VoiceStudio itself (its address list was read from its source code and is checked defensively). Kokoro was slower than real time on the test computer's processor; Supertonic was fast. `TEST-CHECKLIST.md` section K lists the steps.
 
 **Not run for real:** Nemotron 3.5 Lightning, Nemotron 3 Nano 30B and GLM-4.7-Flash (too big for that computer), and any model on Windows or Mac. Small models still make mistakes: always check what the Tutor tells you.
 

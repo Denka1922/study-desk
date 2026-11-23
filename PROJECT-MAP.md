@@ -41,6 +41,7 @@ Page code rules: classic script, ES5 style (`var`, `function`), everything insid
 | `mobile/` | Android (Capacitor); open `mobile/android` in Android Studio. Android has the API key only |
 | `site/index.html` | download page |
 | `desktop/sync/` | `crypto.js`, `lan-server.js` (phone-facing door), `relay-client.js`, `service.js`, `ipc.js`; the page reaches it through `window.studyDesk.sync` (see `preload.js`) |
+| `desktop/voice/` | The Voice tutor, PC side: `catalog.json` (engine and voice files, pinned), `install.js` + `extract.js` (download and unpack), `worker.js` (a separate process that makes the sound), `host.js` (starts and stops it), `service.js` (checks every request, cache, VoiceStudio), `studio.js`, `cache.js`, `ipc.js`; the page reaches it through `window.studyDesk.voice`. In the page: the `vc…` functions after `vTutor` |
 | `relay/` | `worker.js` (Cloudflare Worker), `wrangler.toml`, `README.md` |
 | `SYNC.md` | the contract for all of the above |
 | `scripts/` | `check.js` (all tests), `mac-check.js` (run by the Mac check workflow on real Macs), `make-zip.py`, `sync-app.py`, icons, version scripts |

@@ -11,3 +11,11 @@ Copyright (c) Cosmo Wolfe. Licensed under the Apache License, Version 2.0: https
 
 ## GSAP 3.15.0 (animation)
 Copyright (c) GreenSock. Standard "no charge" GreenSock licence: https://gsap.com/standard-license/
+
+## Voice tutor: programs and voices that Study Desk downloads (not included in the installer)
+The Windows and Mac program can download these when the user presses Download in the Voice tutor. Each file is pinned and checked with a SHA-256 fingerprint.
+
+- **sherpa-onnx 2.0.2** (the engine, with its `sherpa-onnx-node` wrapper and per-system packages). Copyright (c) the k2-fsa authors. Apache License 2.0: https://github.com/k2-fsa/sherpa-onnx
+- **Kokoro** (English voices, `kokoro-int8-multi-lang-v1_0`). Apache License 2.0: https://huggingface.co/hexgrad/Kokoro-82M
+- **Supertonic 3** (31-language voices, `sherpa-onnx-supertonic-3-tts-int8`). Code under the MIT licence, voice model under the OpenRAIL-M licence, which allows use but has use restrictions: https://github.com/supertone-inc/supertonic
+- **VoiceStudio** is not downloaded or included. If the user already runs it, Study Desk talks to it at `127.0.0.1`. It has its own licence (AGPL-3.0): https://github.com/debpalash/VoiceStudio

@@ -115,10 +115,10 @@ function loadPreload() {
   return { exposed, invoked, listeners, electron };
 }
 
-test('preload exposes exactly studyDesk.ai and studyDesk.sync with the documented methods and never ipcRenderer', async () => {
+test('preload exposes exactly studyDesk.ai, studyDesk.sync and studyDesk.voice with the documented methods and never ipcRenderer', async () => {
   const p = loadPreload();
   assert.strictEqual(p.exposed.length, 1); assert.strictEqual(p.exposed[0][0], 'studyDesk');
-  const root = p.exposed[0][1]; assert.deepStrictEqual(Object.keys(root), ['ai', 'sync']);
+  const root = p.exposed[0][1]; assert.deepStrictEqual(Object.keys(root), ['ai', 'sync', 'voice']);
   const ai = root.ai;
   assert.deepStrictEqual(Object.keys(ai).sort(), ['chat', 'cancelChat', 'cli', 'getHardware', 'local', 'recommend', 'version'].sort());
   assert.strictEqual(ai.version, 1);

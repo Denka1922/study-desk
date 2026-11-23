@@ -27,6 +27,7 @@
       "ai/**/*",
       "!ai/tools/**",
       "sync/**/*",
+      "voice/**/*",
       "package.json"
     ],
     "extraResources": [

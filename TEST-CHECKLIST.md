@@ -118,3 +118,17 @@ Do not send any API key or keystore password.
 - [ ] J10. AI Tutor: build a course on the PC; it shows up on the phone. The AI key you typed on the PC is NOT on the phone.
 - [ ] J11. Relay: deploy it with `relay/README.md`, choose Over the internet, pair, turn the phone's Wi-Fi off (mobile data): changes still arrive within about 30 seconds.
 - [ ] J12. Both: works at home on Wi-Fi, and keeps working away from home.
+
+## K. Voice tutor (Windows and Mac program; the computer voice also works on Android and in the browser)
+K1. Open a lesson. A **Voice tutor** button is shown. Press it: a small card opens in the corner and nothing else on the page changes.
+K2. Press **Start** without downloading anything. The tutor thinks, then reads out loud with the computer's own voice. Check that you can hear it and that the words on the card follow the sound.
+K3. **Pause**, then **Resume**: it continues from the same sentence. **Stop** goes to the answer box.
+K4. Type an explanation and press **Send** (or Enter). The tutor answers it out loud and asks another question.
+K5. Under **More voices**, press **Download** for Kokoro (English) or Supertonic 3 (Turkish and others). A bar shows progress. When it ends the new voice is picked. Check it sounds right and the first sentence does not take more than a few seconds.
+K6. Change the voice and the speed while it is speaking: it carries on with the new setting.
+K7. Close the card with the button and with Esc: the sound stops at once.
+K8. Disconnect the internet and read a lesson that was already read once: the downloaded voice still works.
+K9. Press **Remove** on a voice: it goes back to "not downloaded".
+K10. Mac only: if the first voice does not start, note the message on the card and tell us. (The downloaded engine is signed on the Mac only with an ad-hoc signature.)
+K11. If you run VoiceStudio on this computer: press **Check again**; its voices appear in the voice list.
+

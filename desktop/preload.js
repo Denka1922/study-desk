@@ -69,4 +69,29 @@ const sync = {
   },
 };
 
-contextBridge.exposeInMainWorld('studyDesk', { ai, sync });
+// Voice for the AI Tutor: the page asks for a line of text to be spoken and plays the WAV it gets back.
+const VP = 'study-desk:voice:';
+const vcall = (name, arg) => ipcRenderer.invoke(VP + name, arg).then(r => {
+  if (r && r.ok) return r.value;
+  const e = (r && r.error) || {};
+  return Promise.reject({ kind: typeof e.kind === 'string' ? e.kind : 'bad', message: typeof e.message === 'string' ? e.message : 'The voice did not work.' });
+});
+const voice = {
+  version: 1,
+  status: () => vcall('status'),
+  refreshStudio: () => vcall('refreshStudio'),
+  install: a => vcall('install', a),
+  cancel: () => vcall('cancel'),
+  remove: a => vcall('remove', a),
+  removeAll: () => vcall('removeAll'),
+  speak: a => vcall('speak', a),
+  cancelSpeak: () => vcall('cancelSpeak'),
+  onProgress: cb => {
+    if (typeof cb !== 'function') throw new TypeError('onProgress needs a function');
+    const handler = (event, payload) => cb(payload);
+    ipcRenderer.on(VP + 'progress', handler);
+    return () => ipcRenderer.removeListener(VP + 'progress', handler);
+  },
+};
+
+contextBridge.exposeInMainWorld('studyDesk', { ai, sync, voice });

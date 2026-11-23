@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "engine": {
+    "name": "sherpa-onnx",
+    "version": "2.0.2",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE"
+    },
+    "wrapper": {
+      "file": "sherpa-onnx-node-2.0.2.tgz",
+      "url": "https://registry.npmjs.org/sherpa-onnx-node/-/sherpa-onnx-node-2.0.2.tgz",
+      "sizeBytes": 15082,
+      "sha256": "dcebf1db8650a52987342accb2b9a0faba91f079ee970f90aae047202db3af57"
+    },
+    "platforms": {
+      "win-x64": {
+        "file": "sherpa-onnx-win-x64-2.0.2.tgz",
+        "url": "https://registry.npmjs.org/sherpa-onnx-win-x64/-/sherpa-onnx-win-x64-2.0.2.tgz",
+        "sizeBytes": 9062542,
+        "sha256": "b49c291b694277955b5a6a06dd6b0f7f328a437e0a345befd0f7454450738079"
+      },
+      "darwin-arm64": {
+        "file": "sherpa-onnx-darwin-arm64-2.0.2.tgz",
+        "url": "https://registry.npmjs.org/sherpa-onnx-darwin-arm64/-/sherpa-onnx-darwin-arm64-2.0.2.tgz",
+        "sizeBytes": 10350117,
+        "sha256": "c8fcd883832b34f15750724df45ac209d21641cfeb0eabf3de28cd02c067106d"
+      },
+      "darwin-x64": {
+        "file": "sherpa-onnx-darwin-x64-2.0.2.tgz",
+        "url": "https://registry.npmjs.org/sherpa-onnx-darwin-x64/-/sherpa-onnx-darwin-x64-2.0.2.tgz",
+        "sizeBytes": 11540648,
+        "sha256": "d587410a2a602e7e123ab0ab2a2b494c1bc0c1c00478b96a4ba05a57426a0235"
+      }
+    }
+  },
+  "packs": [
+    {
+      "id": "kokoro-en",
+      "title": "Kokoro",
+      "blurb": "Natural English voices. Small and fast on most laptops.",
+      "kind": "kokoro",
+      "languages": [
+        "en"
+      ],
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/hexgrad/Kokoro-82M"
+      },
+      "file": "kokoro-int8-multi-lang-v1_0.tar.bz2",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_0.tar.bz2",
+      "sizeBytes": 132353410,
+      "sha256": "72c347230107ef8a31098ec4d468a605244beef5f1ed00db97efa13518800653",
+      "dir": "kokoro-int8-multi-lang-v1_0",
+      "voices": [
+        {
+          "id": "af_heart",
+          "name": "Heart",
+          "note": "US, female",
+          "sid": 3
+        },
+        {
+          "id": "af_bella",
+          "name": "Bella",
+          "note": "US, female",
+          "sid": 2
+        },
+        {
+          "id": "bf_emma",
+          "name": "Emma",
+          "note": "UK, female",
+          "sid": 21
+        },
+        {
+          "id": "am_michael",
+          "name": "Michael",
+          "note": "US, male",
+          "sid": 16
+        },
+        {
+          "id": "am_fenrir",
+          "name": "Fenrir",
+          "note": "US, male",
+          "sid": 14
+        },
+        {
+          "id": "bm_george",
+          "name": "George",
+          "note": "UK, male",
+          "sid": 26
+        }
+      ]
+    },
+    {
+      "id": "supertonic-3",
+      "title": "Supertonic 3",
+      "blurb": "Fast voices for Turkish, English and about 30 other languages.",
+      "kind": "supertonic",
+      "languages": [
+        "en",
+        "ko",
+        "ja",
+        "ar",
+        "bg",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hi",
+        "hr",
+        "hu",
+        "id",
+        "it",
+        "lt",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sk",
+        "sl",
+        "sv",
+        "tr",
+        "uk",
+        "vi"
+      ],
+      "license": {
+        "name": "OpenRAIL-M model, MIT code",
+        "url": "https://huggingface.co/Supertone/supertonic-3/blob/main/LICENSE"
+      },
+      "file": "sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2",
+      "sizeBytes": 128774318,
+      "sha256": "82fa96f91c4ef8abaae3a14a3f4153facf88bed821d1f7331cec2700f432c427",
+      "dir": "sherpa-onnx-supertonic-3-tts-int8-2026-05-11",
+      "voices": [
+        {
+          "id": "v1",
+          "name": "Voice 1",
+          "note": "higher pitch",
+          "sid": 0
+        },
+        {
+          "id": "v2",
+          "name": "Voice 2",
+          "note": "deeper",
+          "sid": 1
+        },
+        {
+          "id": "v3",
+          "name": "Voice 3",
+          "note": "higher pitch",
+          "sid": 3
+        },
+        {
+          "id": "v4",
+          "name": "Voice 4",
+          "note": "deeper",
+          "sid": 7
+        }
+      ]
+    }
+  ]
+}

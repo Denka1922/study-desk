@@ -13,10 +13,17 @@ const { runCli, detectTools } = require('./ai/cli');
 const { createAiService } = require('./ai/service');
 const { registerAiIpc, createProgressSender, AI_PROGRESS_CHANNEL } = require('./ai/ipc');
 const { registerSyncIpc } = require('./sync/ipc');
+const { loadVoiceCatalog } = require('./voice/catalog');
+const { createHost: createVoiceHost } = require('./voice/host');
+const { createStudio } = require('./voice/studio');
+const { createCache } = require('./voice/cache');
+const { createVoiceService } = require('./voice/service');
+const { registerVoiceIpc, VOICE_PROGRESS_CHANNEL } = require('./voice/ipc');
 
 let win = null;
 let aiService = null;
 let syncIpc = null;
+let voiceService = null;
 
 function appFile() {
   return resolveAppFile({ isPackaged: app.isPackaged, resourcesPath: process.resourcesPath, baseDir: __dirname });
@@ -47,6 +54,27 @@ function startAiService() {
   registerAiIpc({ ipcMain, service: aiService, appFileUrl: pathToFileURL(appFile()).href });
 }
 
+// The AI Tutor's voice: voice packs are downloaded and run here (never in the page); the page only plays the sound.
+function startVoice() {
+  const dataDir = path.join(app.getPath('userData'), 'voice-data');
+  const sendProgress = createProgressSender(p => {
+    try { if (win && !win.isDestroyed()) win.webContents.send(VOICE_PROGRESS_CHANNEL, p); } catch (e) { /* window is closing */ }
+  });
+  const cache = createCache(path.join(dataDir, 'voice', 'cache'));
+  cache.prune().catch(() => {});
+  voiceService = createVoiceService({
+    dataDir,
+    catalog: loadVoiceCatalog(),
+    hardware: { platform: process.platform, arch: process.arch },
+    host: createVoiceHost({}),
+    studio: createStudio(),
+    cache,
+    download: downloadVerified,
+    onProgress: p => sendProgress({ phase: 'voice', modelId: p.packId, done: p.done, total: p.total, packId: p.packId }),
+  });
+  registerVoiceIpc({ ipcMain, service: voiceService, appFileUrl: pathToFileURL(appFile()).href });
+}
+
 // Sync with the phone: the door stays closed until the user pairs a device in the app.
 function startSync() {
   syncIpc = registerSyncIpc({ ipcMain, getWindow: () => win, appFileUrl: pathToFileURL(appFile()).href });
@@ -55,6 +83,7 @@ function startSync() {
 function stopAi() {
   if (aiService) Promise.resolve(aiService.shutdown()).catch(() => {});
   if (syncIpc) Promise.resolve(syncIpc.shutdown()).catch(() => {});
+  if (voiceService) Promise.resolve(voiceService.shutdown()).catch(() => {});
 }
 
 function createWindow() {
@@ -104,6 +133,7 @@ if (!app.requestSingleInstanceLock()) {
       : null);
     startAiService(); // IPC is ready before the page loads
     startSync();
+    try { startVoice(); } catch (e) { console.error('The voice feature could not start:', e && e.message); } // the planner must open even without voice
     createWindow();
   });
 }
