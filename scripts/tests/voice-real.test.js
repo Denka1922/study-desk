@@ -31,3 +31,41 @@ test('Supertonic says Turkish with its special letters, and a different speed ma
     const x = wavInfo(a), y = wavInfo(b); assert.strictEqual(x.rate, 44100); assert.ok(x.seconds > 4, 'a full Turkish sentence: ' + x.seconds); assert.ok(y.seconds < x.seconds * 0.9, 'faster speed is shorter: ' + y.seconds + ' vs ' + x.seconds);
   } finally { h.stop(); }
 });
+
+// ---- speech input: the real listener (voice-activity detection + recogniser) on real English speech ----
+//   also needs m/silero_vad.onnx and the listening model folders next to the voice models
+const { createEarsHost } = require('../../desktop/voice/ears-host');
+const EARS = { parakeet: 'sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8', moonshine: 'sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27' };
+const haveEars = have && fs.existsSync(path.join(DIR, 'm', 'silero_vad.onnx')) && fs.existsSync(path.join(DIR, 'm', EARS.parakeet));
+function pcm16k(file) { // 16-bit mono WAV at 16 kHz (the sample recordings that ship inside the models)
+  const b = fs.readFileSync(file); assert.strictEqual(b.readUInt32LE(24), 16000); const n = (b.length - 44) >> 1, x = new Float32Array(n);
+  for (let i = 0; i < n; i++) x[i] = b.readInt16LE(44 + i * 2) / 32768; return x;
+}
+const earsSpec = (key, kind, model) => ({ ...spec(key, kind, model), init: { vadModel: path.join(DIR, 'm', 'silero_vad.onnx'), tune: {} } });
+const words = t => t.toLowerCase().replace(/[^a-z' ]+/g, ' ').split(/\s+/).filter(Boolean);
+
+test('the listener understands real English speech (Parakeet), and silence gives no words', { skip: !haveEars && 'real listening files not on this computer', timeout: 180000 }, async () => {
+  const h = createEarsHost({}); const s = earsSpec('parakeet-en', 'nemo-ctc', EARS.parakeet);
+  try {
+    const dir = path.join(DIR, 'm', EARS.parakeet, 'test_wavs');
+    for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.wav'))) {
+      const x = pcm16k(path.join(dir, f)), r = await h.speak(s, { samples: x });
+      assert.ok(words(r.text).length >= 3, f + ': ' + JSON.stringify(r.text)); console.log('# heard', f, JSON.stringify(r.text), r.ms + ' ms for ' + (x.length / 16000).toFixed(1) + ' s');
+    }
+    const quiet = await h.speak(s, { samples: new Float32Array(16000 * 3) });
+    assert.strictEqual(quiet.text, '', 'three seconds of silence');
+    // two sentences with a gap in the middle come back as one text, in order
+    const a = pcm16k(path.join(dir, '0.wav')), b = pcm16k(path.join(dir, '1.wav')), gap = new Float32Array(16000);
+    const both = new Float32Array(a.length + gap.length + b.length); both.set(a); both.set(gap, a.length); both.set(b, a.length + gap.length);
+    const one = (await h.speak(s, { samples: a })).text, two = (await h.speak(s, { samples: b })).text, joined = (await h.speak(s, { samples: both })).text;
+    assert.strictEqual(words(joined).join(' '), words(one + ' ' + two).join(' '));
+  } finally { h.stop(); }
+});
+
+test('the small English listener (Moonshine) understands the same speech', { skip: !(haveEars && fs.existsSync(path.join(DIR, 'm', EARS.moonshine))) && 'real listening files not on this computer', timeout: 180000 }, async () => {
+  const h = createEarsHost({}); const s = earsSpec('moonshine-en', 'moonshine', EARS.moonshine);
+  try {
+    const x = pcm16k(path.join(DIR, 'm', EARS.parakeet, 'test_wavs', '0.wav')), r = await h.speak(s, { samples: x });
+    assert.ok(words(r.text).length >= 3, JSON.stringify(r.text)); console.log('# heard (moonshine)', JSON.stringify(r.text));
+  } finally { h.stop(); }
+});

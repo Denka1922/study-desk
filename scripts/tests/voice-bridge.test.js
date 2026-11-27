@@ -47,6 +47,24 @@ test('arguments are checked before the service sees them', async () => {
   assert.deepStrictEqual(Object.keys(r.touched[0][1][0]).sort(), Object.keys(SPEAK).sort(), 'extra fields are dropped');
 });
 
+const HEAR = { packId: 'parakeet-en', lang: 'en', samples: new Float32Array(16000) };
+test('listening requests are checked too: ids, language and a real 16 kHz recording of a sensible length', async () => {
+  const r = rig();
+  const bad = [['listenInstall', { packId: '../x' }], ['listenInstall', {}], ['listenInstall', null], ['listenRemove', { packId: 'A' }], ['listenRemove', 5],
+    ['hear', { ...HEAR, packId: '../x' }], ['hear', { ...HEAR, lang: 'english' }], ['hear', { ...HEAR, lang: undefined }], ['hear', { ...HEAR, samples: [1, 2, 3] }], ['hear', { ...HEAR, samples: new Float64Array(16000) }],
+    ['hear', { ...HEAR, samples: new Uint8Array(16000) }], ['hear', { ...HEAR, samples: new Float32Array(0) }], ['hear', { ...HEAR, samples: new Float32Array(16000 * 120 + 1) }], ['hear', { ...HEAR, samples: 'abc' }], ['hear', { ...HEAR, samples: undefined }], ['hear', 'hi'], ['hear', null]];
+  for (const [n, a] of bad) { const res = await r.call(n, ok, a); assert.strictEqual(res.ok, false, n + ' ' + String(a && JSON.stringify(a).slice(0, 80))); }
+  assert.strictEqual(r.touched.length, 0);
+  assert.strictEqual((await r.call('hear', ok, { ...HEAR, extra: 'x', out: '/etc/passwd' })).ok, true);
+  assert.deepStrictEqual(Object.keys(r.touched[0][1][0]).sort(), ['lang', 'packId', 'samples'], 'extra fields are dropped');
+  assert.ok(r.touched[0][1][0].samples instanceof Float32Array);
+  assert.strictEqual((await r.call('listenInstall', ok, { packId: 'moonshine-en' })).ok, true);
+  assert.strictEqual((await r.call('listenRemove', ok, { packId: 'moonshine-en' })).ok, true);
+  assert.strictEqual((await r.call('cancelHear', ok)).ok, true);
+  assert.deepStrictEqual(r.touched.slice(1).map(t => t[0]), ['listenInstall', 'listenRemove', 'cancelHear']);
+  assert.strictEqual((await r.call('hear', { senderFrame: { url: 'https://evil.example/' } }, HEAR)).ok, false, 'only the app page may listen');
+});
+
 test('errors reach the page as a known kind with a plain message; surprises are made generic', async () => {
   const r = rig({ speak: async () => { throw Object.assign(new Error('The voice was stopped.'), { kind: 'cancelled' }); }, status: async () => { throw new Error('C:\\Users\\secret\\path failed'); } });
   assert.deepStrictEqual(await r.call('speak', ok, SPEAK), { ok: false, error: { kind: 'cancelled', message: 'The voice was stopped.' } });
@@ -68,8 +86,8 @@ function loadPreload(reply) {
 
 test('preload gives the page studyDesk.voice with the documented methods, touching only voice channels', async () => {
   const p = loadPreload(); const v = p.exposed[0][1].voice;
-  assert.deepStrictEqual(Object.keys(v).sort(), ['cancel', 'cancelSpeak', 'install', 'onProgress', 'refreshStudio', 'remove', 'removeAll', 'speak', 'status', 'version']);
-  await v.status(); await v.refreshStudio(); await v.install({}); await v.cancel(); await v.remove({}); await v.removeAll(); await v.speak({}); await v.cancelSpeak();
+  assert.deepStrictEqual(Object.keys(v).sort(), ['cancel', 'cancelHear', 'cancelSpeak', 'hear', 'install', 'listenInstall', 'listenRemove', 'onProgress', 'refreshStudio', 'remove', 'removeAll', 'speak', 'status', 'version']);
+  await v.status(); await v.refreshStudio(); await v.install({}); await v.cancel(); await v.remove({}); await v.removeAll(); await v.speak({}); await v.cancelSpeak(); await v.listenInstall({}); await v.listenRemove({}); await v.hear({}); await v.cancelHear();
   assert.deepStrictEqual(p.invoked.map(x => x[0]).sort(), [...VOICE_CHANNELS].sort());
 });
 

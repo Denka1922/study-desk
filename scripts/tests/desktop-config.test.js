@@ -39,8 +39,23 @@ test('installer and portable targets, names and shortcuts', () => {
 test('the page is shipped as a resource and only the shell files are packed', () => {
   const b = pkg().build;
   assert.deepStrictEqual(b.extraResources, [{ from: '../app/index.html', to: 'app/index.html' }]);
-  assert.deepStrictEqual([...b.files].sort(), ['!ai/tools/**', 'ai/**/*', 'main.js', 'package.json', 'preload.js', 'security.js', 'sync/**/*', 'voice/**/*']);
+  assert.deepStrictEqual([...b.files].sort(), ['!ai/tools/**', 'ai/**/*', 'main.js', 'package.json', 'permissions.js', 'preload.js', 'security.js', 'sync/**/*', 'voice/**/*']);
   assert.strictEqual(pkg().main, 'main.js');
+});
+
+test('every file the app loads at start is in the packed file list (a missing one would crash the installed app)', () => {
+  const files = pkg().build.files.filter(f => !f.startsWith('!'));
+  const packed = rel => files.some(f => f === rel || (f.endsWith('/**/*') && rel.startsWith(f.slice(0, -4))) || (f.endsWith('/**') && rel.startsWith(f.slice(0, -2))));
+  const seen = [], walk = (file, dir) => {
+    const src = read('desktop/' + path.posix.join(dir, file));
+    for (const m of src.matchAll(/require\('(\.[^']+)'\)/g)) {
+      let rel = path.posix.normalize(path.posix.join(dir, m[1])); if (!/\.(js|json)$/.test(rel)) rel += fs.existsSync(path.join(ROOT, 'desktop', rel + '.js')) ? '.js' : '/index.js';
+      if (seen.includes(rel)) continue; seen.push(rel); assert.ok(packed(rel), rel + ' is required by ' + path.posix.join(dir, file) + ' but is not in build.files');
+      if (rel.endsWith('.js')) walk(path.posix.basename(rel), path.posix.dirname(rel));
+    }
+  };
+  walk('main.js', '.'); walk('preload.js', '.');
+  assert.ok(seen.includes('permissions.js') && seen.includes('voice/service.js') && seen.length > 10, seen.join());
 });
 
 test('lock file exists and every package comes from the npm registry', () => {
@@ -59,6 +74,10 @@ test('Mac build: dmg and zip for both chips, unsigned-but-ad-hoc-signed, same st
   assert.strictEqual(b.mac.icon, 'icon.png');
   assert.strictEqual(b.mac.artifactName, 'Study-Desk-${version}-mac-${arch}.${ext}');
   assert.strictEqual(b.mac.category, 'public.app-category.education');
+  assert.match(b.mac.extendInfo.NSMicrophoneUsageDescription, /answer|speak|talk/i, 'the Mac asks for the microphone with a plain reason');
+  assert.ok(!/only when you press/i.test(b.mac.extendInfo.NSMicrophoneUsageDescription), 'Mic open also listens on later turns, so the text must not promise a press every time');
+  assert.match(b.mac.extendInfo.NSMicrophoneUsageDescription, /Mic open|turn/i);
+  assert.ok(!('NSCameraUsageDescription' in b.mac.extendInfo), 'the camera is never asked for');
   assert.strictEqual(b.appId, 'app.studydesk.planner');
   assert.strictEqual(pkg().scripts['dist:mac'], 'electron-builder --mac --publish never');
 });

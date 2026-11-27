@@ -7,8 +7,8 @@ const { pathToFileURL } = require('node:url');
 
 const MAIN = path.resolve(__dirname, '../../desktop/main.js');
 
-function makeFake({ lock = true, isPackaged = false, template = null } = {}) {
-  const log = { windows: [], openExternal: [], menu: 'unset', quit: 0, appHandlers: {}, reqPerm: null, checkPerm: null, order: [], ipcChannels: [], serviceCreated: 0, shutdown: 0, serviceDeps: null };
+function makeFake({ lock = true, isPackaged = false, template = null, mic = null } = {}) {
+  const log = { windows: [], openExternal: [], menu: 'unset', quit: 0, appHandlers: {}, reqPerm: null, checkPerm: null, order: [], ipcChannels: [], serviceCreated: 0, shutdown: 0, serviceDeps: null, micAsked: [] };
   class BrowserWindow {
     constructor(opts) {
       this.opts = opts; this.handlers = {}; this.loaded = null; this.calls = [];
@@ -41,6 +41,7 @@ function makeFake({ lock = true, isPackaged = false, template = null } = {}) {
     BrowserWindow,
     Menu: { setApplicationMenu: m => { log.menu = m; }, buildFromTemplate: t => { log.template = t; return { built: true }; } },
     shell: { openExternal: u => { log.openExternal.push(u); return Promise.resolve(); } },
+    systemPreferences: mic ? { askForMediaAccess: async kind => { log.micAsked.push(kind); return mic === 'yes'; } } : undefined,
     session: { defaultSession: {
       setPermissionRequestHandler: fn => { log.reqPerm = fn; },
       setPermissionCheckHandler: fn => { log.checkPerm = fn; },
@@ -116,6 +117,29 @@ test('all permission requests are denied', async () => {
   log.reqPerm({}, 'media', ok => { granted = ok; });
   assert.strictEqual(granted, false);
   assert.strictEqual(log.checkPerm({}, 'geolocation'), false);
+});
+
+test('only the microphone can be allowed: audio, for the app page in the app window', async () => {
+  const log = await loadMain();
+  const w = log.windows[0], url = pathToFileURL(w.loaded).href;
+  const ask = (wc, p, d) => new Promise(res => log.reqPerm(wc, p, res, d));
+  assert.strictEqual(await ask(w.webContents, 'media', { mediaTypes: ['audio'], requestingUrl: url, isMainFrame: true }), true);
+  assert.strictEqual(await ask(w.webContents, 'media', { mediaTypes: ['audio', 'video'], requestingUrl: url, isMainFrame: true }), false, 'no camera');
+  assert.strictEqual(await ask(w.webContents, 'media', { mediaTypes: ['audio'], requestingUrl: 'https://evil.example/', isMainFrame: true }), false);
+  assert.strictEqual(await ask({}, 'media', { mediaTypes: ['audio'], requestingUrl: url, isMainFrame: true }), false, 'not the app window');
+  assert.strictEqual(await ask(w.webContents, 'geolocation', { requestingUrl: url, isMainFrame: true }), false);
+  assert.strictEqual(log.checkPerm(w.webContents, 'media', 'file:///', { mediaType: 'audio', requestingUrl: url, isMainFrame: true }), true);
+  assert.strictEqual(log.checkPerm(w.webContents, 'media', 'file:///', { mediaType: 'video', requestingUrl: url, isMainFrame: true }), false);
+  assert.deepStrictEqual(log.micAsked, [], 'on Windows the system is not asked');
+});
+
+test('on a Mac the system microphone question is asked, and its answer decides', async () => {
+  for (const [mic, want] of [['yes', true], ['no', false]]) {
+    const log = await loadMain({ platform: 'darwin', mic });
+    const w = log.windows[0], url = pathToFileURL(w.loaded).href;
+    const got = await new Promise(res => log.reqPerm(w.webContents, 'media', res, { mediaTypes: ['audio'], requestingUrl: url, isMainFrame: true }));
+    assert.strictEqual(got, want, mic); assert.deepStrictEqual(log.micAsked, ['microphone']);
+  }
 });
 
 test('second copy: quits; first copy: restores and focuses', async () => {

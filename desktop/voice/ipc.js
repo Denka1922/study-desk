@@ -2,12 +2,13 @@
 // The only doorway from the page to the voice service. Same rules as ../ai/ipc.js: only the app's own page may call,
 // and every argument is checked before the service sees it.
 const PREFIX = 'study-desk:voice:';
-const NAMES = ['status', 'install', 'cancel', 'remove', 'removeAll', 'speak', 'cancelSpeak', 'refreshStudio'];
+const NAMES = ['status', 'install', 'cancel', 'remove', 'removeAll', 'speak', 'cancelSpeak', 'refreshStudio', 'listenInstall', 'listenRemove', 'hear', 'cancelHear'];
 const VOICE_CHANNELS = NAMES.map(n => PREFIX + n);
 const VOICE_PROGRESS_CHANNEL = PREFIX + 'progress'; // main to page only, never handled
 
 const ID_RE = /^[a-z0-9._-]{1,60}$/;
 const VOICE_RE = /^[\w .:@-]{1,80}$/;
+const MAX_SAMPLES = 16000 * 120; // two minutes of 16 kHz sound
 const KINDS = ['cancelled', 'bad', 'disk', 'checksum', 'network', 'timeout', 'engine'];
 
 class BadRequest extends Error { constructor(m) { super(m || 'The request was not valid.'); this.kind = 'bad'; } }
@@ -16,9 +17,18 @@ const need = (c, m) => { if (!c) throw new BadRequest(m); };
 const none = () => undefined;
 
 const VALIDATE = {
-  status: none, cancel: none, removeAll: none, cancelSpeak: none, refreshStudio: none,
+  status: none, cancel: none, removeAll: none, cancelSpeak: none, refreshStudio: none, cancelHear: none,
   install: a => { need(isObj(a)); need(typeof a.packId === 'string' && ID_RE.test(a.packId)); return { packId: a.packId }; },
   remove: a => { need(isObj(a)); need(typeof a.packId === 'string' && ID_RE.test(a.packId)); return { packId: a.packId }; },
+  listenInstall: a => { need(isObj(a)); need(typeof a.packId === 'string' && ID_RE.test(a.packId)); return { packId: a.packId }; },
+  listenRemove: a => { need(isObj(a)); need(typeof a.packId === 'string' && ID_RE.test(a.packId)); return { packId: a.packId }; },
+  hear: a => {
+    need(isObj(a));
+    need(typeof a.packId === 'string' && ID_RE.test(a.packId));
+    need(typeof a.lang === 'string' && /^[a-z]{2,3}$/.test(a.lang));
+    need(a.samples instanceof Float32Array && a.samples.length >= 1 && a.samples.length <= MAX_SAMPLES);
+    return { packId: a.packId, lang: a.lang, samples: a.samples };
+  },
   speak: a => {
     need(isObj(a));
     need(a.source === 'pack' || a.source === 'studio');
@@ -34,7 +44,7 @@ const VALIDATE = {
     return out;
   },
 };
-const METHOD = { status: 'status', install: 'install', cancel: 'cancelInstall', remove: 'remove', removeAll: 'removeAll', speak: 'speak', cancelSpeak: 'cancelSpeak', refreshStudio: 'refreshStudio' };
+const METHOD = { status: 'status', install: 'install', cancel: 'cancelInstall', remove: 'remove', removeAll: 'removeAll', speak: 'speak', cancelSpeak: 'cancelSpeak', refreshStudio: 'refreshStudio', listenInstall: 'listenInstall', listenRemove: 'listenRemove', hear: 'hear', cancelHear: 'cancelHear' };
 
 function plainUrl(u) { try { const x = new URL(u); x.hash = ''; x.search = ''; return x.href; } catch (e) { return null; } }
 

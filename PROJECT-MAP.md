@@ -41,12 +41,12 @@ Page code rules: classic script, ES5 style (`var`, `function`), everything insid
 | `mobile/` | Android (Capacitor); open `mobile/android` in Android Studio. Android has the API key only |
 | `site/index.html` | download page |
 | `desktop/sync/` | `crypto.js`, `lan-server.js` (phone-facing door), `relay-client.js`, `service.js`, `ipc.js`; the page reaches it through `window.studyDesk.sync` (see `preload.js`) |
-| `desktop/voice/` | The Voice tutor, PC side: `catalog.json` (engine and voice files, pinned), `install.js` + `extract.js` (download and unpack), `worker.js` (a separate process that makes the sound), `host.js` (starts and stops it), `service.js` (checks every request, cache, VoiceStudio), `studio.js`, `cache.js`, `ipc.js`; the page reaches it through `window.studyDesk.voice`. In the page: the `vc…` functions after `vTutor` |
+| `desktop/voice/` | The Voice tutor, PC side: `catalog.json` (engine and voice files, pinned), `install.js` + `extract.js` (download and unpack), `worker.js` (a separate process that makes the sound), `host.js` (starts and stops it), `service.js` (checks every request, cache, VoiceStudio), `studio.js`, `cache.js`, `ipc.js`; the listener (speech to text) is `ears-config.js` (settings for the engine), `ears-worker.js` (a separate process: voice-activity detection plus the recogniser) and `ears-host.js` (starts and stops it); the page reaches it through `window.studyDesk.voice` (`hear`, `listenInstall`, `listenRemove`). In the page the microphone code is the `vm…` functions. `desktop/permissions.js` lets the app page use the microphone (audio only) and nothing else. In the page: the `vc…` functions after `vTutor` |
 | `relay/` | `worker.js` (Cloudflare Worker), `wrangler.toml`, `README.md` |
 | `SYNC.md` | the contract for all of the above |
 | `scripts/` | `check.js` (all tests), `mac-check.js` (run by the Mac check workflow on real Macs), `make-zip.py`, `sync-app.py`, icons, version scripts |
 | `scripts/tests/` | all tests; `helpers.js` has `pageWithExports(names)` to reach the page's inner functions without touching the shipped file |
-| `.github/workflows/` | `build.yml` (test, build Windows and Mac, publish), `verify-catalog.yml` (manual: re-check model file fingerprints) |
+| `.github/workflows/` | `build.yml` (test, build Windows and Mac, publish), `verify-catalog.yml` (manual: re-check model file fingerprints), `verify-turkish-listener.yml` (manual: measures the Turkish listener model and tests it; `scripts/verify-turkish-listener.js`) |
 | `README.md`, `FIRST-BUILD.md`, `PLAY-STORE.md`, `TEST-CHECKLIST.md` | guides for the owner |
 
 ## Local and CLI AI (`desktop/ai/`)

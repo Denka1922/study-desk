@@ -22,6 +22,7 @@
     },
     "files": [
       "main.js",
+      "permissions.js",
       "preload.js",
       "security.js",
       "ai/**/*",
@@ -85,7 +86,10 @@
           ]
         }
       ],
-      "artifactName": "Study-Desk-${version}-mac-${arch}.${ext}"
+      "artifactName": "Study-Desk-${version}-mac-${arch}.${ext}",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Study Desk uses the microphone when you speak your answers to the AI Tutor: when you press the microphone button, and, if you chose Mic open, on your turns. Your voice is understood on this computer and is never sent anywhere."
+      }
     }
   }
 }

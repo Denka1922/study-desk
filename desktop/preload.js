@@ -86,6 +86,11 @@ const voice = {
   removeAll: () => vcall('removeAll'),
   speak: a => vcall('speak', a),
   cancelSpeak: () => vcall('cancelSpeak'),
+  // Speech input: the page sends a recording (mono, 16 kHz, Float32Array) and gets the words back.
+  listenInstall: a => vcall('listenInstall', a),
+  listenRemove: a => vcall('listenRemove', a),
+  hear: a => vcall('hear', a),
+  cancelHear: () => vcall('cancelHear'),
   onProgress: cb => {
     if (typeof cb !== 'function') throw new TypeError('onProgress needs a function');
     const handler = (event, payload) => cb(payload);

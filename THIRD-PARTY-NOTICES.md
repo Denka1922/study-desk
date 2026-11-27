@@ -18,4 +18,8 @@ The Windows and Mac program can download these when the user presses Download in
 - **sherpa-onnx 2.0.2** (the engine, with its `sherpa-onnx-node` wrapper and per-system packages). Copyright (c) the k2-fsa authors. Apache License 2.0: https://github.com/k2-fsa/sherpa-onnx
 - **Kokoro** (English voices, `kokoro-int8-multi-lang-v1_0`). Apache License 2.0: https://huggingface.co/hexgrad/Kokoro-82M
 - **Supertonic 3** (31-language voices, `sherpa-onnx-supertonic-3-tts-int8`). Code under the MIT licence, voice model under the OpenRAIL-M licence, which allows use but has use restrictions: https://github.com/supertone-inc/supertonic
+- **NVIDIA Parakeet-TDT-CTC 110M** (English listener "English (accurate)", int8 sherpa-onnx build). Creative Commons Attribution 4.0 (CC-BY-4.0): https://huggingface.co/nvidia/parakeet-tdt_ctc-110m
+- **Moonshine tiny** (English listener "English (small)"). MIT licence, Copyright (c) Useful Sensors: https://github.com/moonshine-ai/moonshine
+- **Silero VAD** (finds where speech starts and stops). MIT licence, Copyright (c) the Silero Team: https://github.com/snakers4/silero-vad
+- The listener models above are downloaded from the sherpa-onnx `asr-models` release (https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models). A Turkish listener (ufakzeka-kulak, Apache-2.0) will be listed here with its training-data credits when it is added.
 - **VoiceStudio** is not downloaded or included. If the user already runs it, Study Desk talks to it at `127.0.0.1`. It has its own licence (AGPL-3.0): https://github.com/debpalash/VoiceStudio

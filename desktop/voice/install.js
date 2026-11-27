@@ -6,6 +6,7 @@ const path = require('node:path');
 const { downloadVerified } = require('../ai/download');
 const { hostAllowed, platformKey } = require('./catalog');
 const { extractTarball, run, VoiceError } = require('./extract');
+const { REQUIRED } = require('./ears-config');
 
 async function fetchAndUnpack(o, asset, finalDir, innerDir, label) {
   const root = path.dirname(finalDir);
@@ -74,4 +75,54 @@ async function ensurePack(o) {
   return dir;
 }
 
-module.exports = { ensureEngine, ensurePack, engineInstalled, packInstalled, packDir, enginePaths, defaultSign };
+// ---- speech input -----------------------------------------------------------------------------------------------------
+// One small shared file (it finds where speech starts and stops) plus a listening model. Same rules as the voices: pinned
+// address, pinned SHA-256, nothing is given its final name before it is checked.
+function vadFile(dataDir) { return path.join(dataDir, 'voice', 'vad', 'silero_vad.onnx'); }
+function vadInstalled(dataDir) { return fs.existsSync(vadFile(dataDir)); }
+
+async function ensureVad(o) {
+  const dest = vadFile(o.dataDir);
+  if (fs.existsSync(dest)) return dest;
+  const a = o.catalog.ears.vad;
+  await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+  await (o.download || downloadVerified)({ url: a.url, destPath: dest, sha256: a.sha256, sizeBytes: a.sizeBytes, onProgress: o.onProgress || (() => {}), signal: o.signal, hostAllowed });
+  return dest;
+}
+
+function missingFiles(dir, kind) { return (REQUIRED[kind] || []).filter(n => !fs.existsSync(path.join(dir, n))); }
+
+// onProgress(done, total) counts the bytes of this model only.
+async function ensureEarsPack(o0) {
+  const o = { ...o0, onProgress: o0.onProgress || (() => {}) };
+  const pack = o.pack, dir = packDir(o.dataDir, pack), marker = path.join(dir, 'installed.json');
+  if (fs.existsSync(marker)) return dir;
+  const bad = () => new VoiceError('The listening model download did not contain the expected files.');
+  if (!pack.files) {
+    try {
+      await fetchAndUnpack(o, pack, dir, pack.dir, 'listening model');
+      if (missingFiles(dir, pack.kind).length) throw bad();
+    } catch (e) { await fs.promises.rm(dir, { recursive: true, force: true }); throw e; }
+  } else {
+    const tmp = dir + '.tmp';
+    await fs.promises.rm(tmp, { recursive: true, force: true });
+    await fs.promises.mkdir(tmp, { recursive: true });
+    try {
+      let base = 0;
+      for (const f of pack.files) {
+        await (o.download || downloadVerified)({ url: f.url, destPath: path.join(tmp, f.file), sha256: f.sha256, sizeBytes: f.sizeBytes, signal: o.signal, hostAllowed,
+          onProgress: (d) => o.onProgress(base + Math.min(d, f.sizeBytes), pack.sizeBytes) });
+        base += f.sizeBytes;
+        o.onProgress(base, pack.sizeBytes);
+      }
+      if (missingFiles(tmp, pack.kind).length) throw bad();
+      await fs.promises.rm(dir, { recursive: true, force: true });
+      await fs.promises.rename(tmp, dir);
+    } catch (e) { await fs.promises.rm(dir, { recursive: true, force: true }); throw e; }
+    finally { await fs.promises.rm(tmp, { recursive: true, force: true }); }
+  }
+  await fs.promises.writeFile(marker, JSON.stringify({ id: pack.id, at: new Date().toISOString() }));
+  return dir;
+}
+
+module.exports = { vadFile, vadInstalled, ensureVad, ensureEarsPack, ensureEngine, ensurePack, engineInstalled, packInstalled, packDir, enginePaths, defaultSign };

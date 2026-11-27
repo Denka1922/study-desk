@@ -1,0 +1,31 @@
+name: Verify Turkish listener
+
+# Manual only. Downloads the Turkish speech-recognition model from Hugging Face, measures its files, makes Turkish speech
+# with the app's own Turkish voice, plays it through the app's own listener and scores the words. The log ends with the
+# catalog entry to add to desktop/voice/catalog.json (the pinned sizes and hashes). Run it once, and again whenever the
+# model or the listener changes.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - run: node scripts/verify-turkish-listener.js "$RUNNER_TEMP/tr-check"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: turkish-listener-report
+          path: ${{ runner.temp }}/tr-check/turkish-listener-report.json
+          if-no-files-found: ignore

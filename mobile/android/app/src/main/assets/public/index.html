@@ -345,6 +345,17 @@ body{background-image:radial-gradient(1100px 460px at 88% -8%,color-mix(in srgb,
 .vc-pack>.sub,.vc-pack>.ai-bar{grid-column:1/-1}
 .vc-note{font-size:12px;color:var(--muted);margin:6px 0 0}
 .vc-open{margin-left:auto}
+.vm{display:grid;gap:6px}
+.vm-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.vm-meter{flex:1;min-width:90px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.vm-meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .06s linear}
+.vm .vc-note{margin:0}
+.vm-mode{border:0;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:6px;min-width:0}
+.vm-mode label span{min-width:0;overflow-wrap:anywhere}
+.vm-mode legend{font-size:13px;color:var(--muted);padding:0;margin-bottom:2px}
+.vm-mode label{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.4;cursor:pointer}
+.vm-mode input{width:auto;margin-top:3px;flex:none;padding:0}
+@media (prefers-reduced-motion:reduce){.vm-meter i{transition:none}}
 @media (max-width:859px){.vc-card{left:12px;right:12px;width:auto;bottom:calc(76px + env(safe-area-inset-bottom,0px));max-height:calc(100vh - 110px)}}
 @media (prefers-reduced-motion:no-preference){.vc-card{animation:pop .14s ease-out}}
 .ai-courses,.ai-lessons{list-style:none;margin:0;padding:0;display:grid;gap:10px}
@@ -3221,12 +3232,14 @@ function vcHasOs(){ try{ return !!(window.speechSynthesis&&window.SpeechSynthesi
 function vcSupported(){ return !!vcBridge()||vcHasOs(); }
 function vcCfg(){
   if(vc.cfg) return vc.cfg;
-  var c={voice:'',speed:1};
+  var c={voice:'',speed:1,mic:'push',micOk:false};
   try{
     var r=JSON.parse(localStorage.getItem(VC_KEY)||'null');
     if(r&&typeof r==='object'){
       if(typeof r.voice==='string'&&r.voice.length<200) c.voice=r.voice;
       var s=parseFloat(r.speed); if(VC_SPEEDS.some(function(x){ return parseFloat(x[0])===s; })) c.speed=s;
+      if(r.mic==='open') c.mic='open';
+      if(r.micOk===true) c.micOk=true;
     }
   }catch(e){}
   vc.cfg=c; return c;
@@ -3448,6 +3461,7 @@ function vcAsk(mode,answer){
 }
 function vcSend(){
   if(vc.phase!=='listening') return;
+  vmAbort('');
   var ta=document.getElementById('vc-ans'); if(ta) vc.answer=ta.value;
   var a=String(vc.answer||'').replace(/\s+/g,' ').trim().slice(0,1200);
   if(!a){ vc.err='Type your explanation first.'; vcRender(); return; }
@@ -3477,9 +3491,9 @@ function vcOnProgress(p){
   if(!p||p.phase!=='voice'||!vc.prog||!vc.open) return;
   vc.prog.pct=p.total>0?Math.max(0,Math.min(100,Math.round(p.done/p.total*100))):0;
   var el=document.getElementById('vc');
-  var bar=el&&el.querySelector('.vc-bar i'), lab=el&&el.querySelector('.vc-pct');
-  if(bar) bar.style.width=vc.prog.pct+'%';
-  if(lab) lab.textContent=vc.prog.pct+'%';
+  var bars=el?el.querySelectorAll('.vc-bar i'):[], labs=el?el.querySelectorAll('.vc-pct'):[], k;
+  for(k=0;k<bars.length;k++) bars[k].style.width=vc.prog.pct+'%';
+  for(k=0;k<labs.length;k++) labs[k].textContent=vc.prog.pct+'%';
 }
 function vcInstall(id){
   var b=vcBridge(); if(!b||vc.prog) return;
@@ -3504,7 +3518,7 @@ function vcRemove(id){
 }
 function vcMb(n){ return Math.max(1,Math.round(n/1048576))+' MB'; }
 function vcMoreHtml(){
-  var st=vc.st, out='<summary>Get better voices</summary>';
+  var st=vc.st, out='<summary>Voices and listening</summary>';
   if(!st) return out+'<p class="vc-note">'+esc(vc.stErr||'Looking for voices…')+'</p>';
   if(!st.available) out+='<p class="vc-note">Offline voices are not available on this computer. The computer voice still works.</p>';
   else st.packs.forEach(function(p){
@@ -3519,11 +3533,232 @@ function vcMoreHtml(){
       +'<div class="sub">'+esc(p.blurb)+(lic?' Licence: '+esc(lic)+'.':'')+'</div>'
       +(busy?'<div class="ai-bar vc-bar" role="progressbar" aria-label="Download progress"><i style="width:'+vc.prog.pct+'%"></i></div><div class="sub"><span class="vc-pct">'+vc.prog.pct+'%</span> downloaded</div>':'')+'</div>';
   });
+  var lp=st.listen&&st.listen.packs, bl=vcBridge();
+  if(lp&&lp.length&&bl&&typeof bl.listenInstall==='function'){
+    out+='<p class="vc-note"><strong>Listening</strong> (speak your answers instead of typing)</p>';
+    lp.forEach(function(p){
+      var langs=p.languages.map(function(l){ return VC_LANGNAME[l]||l; }).join(', '), busy=vc.prog&&vc.prog.packId===p.id, act;
+      var size=vcMb(p.sizeBytes+(st.engine&&st.engine.installed?0:(st.engine?st.engine.sizeBytes:0)));
+      if(busy) act='<button class="btn small" type="button" data-act="vc-cancel-install" aria-label="Cancel the '+esc(p.title)+' download">Cancel</button>';
+      else if(p.installed) act='<button class="btn small" type="button" data-act="vm-remove" data-id="'+esc(p.id)+'" aria-label="Remove '+esc(p.title)+'"'+(vc.prog?' disabled':'')+'>Remove</button>';
+      else act='<button class="btn small primary" type="button" data-act="vm-install" data-id="'+esc(p.id)+'" aria-label="Download '+esc(p.title)+'"'+(vc.prog?' disabled':'')+'>Download</button>';
+      out+='<div class="vc-pack"><div><strong>'+esc(p.title)+'</strong> <span class="sub">'+esc(langs)+' · '+(p.installed?'installed':size)+'</span></div>'+act
+        +'<div class="sub">'+esc(p.blurb)+(p.credit?' Credit: '+esc(p.credit)+'.':'')+(p.license&&p.license.name?' Licence: '+esc(p.license.name)+'.':'')+'</div>'
+        +(busy?vmProgHtml():'')+'</div>';
+    });
+  }
   var s=st.studio;
   out+='<div class="vc-pack"><div><strong>VoiceStudio</strong> <span class="sub">'+(s&&s.found?'running on this computer':'not running')+'</span></div>'
     +'<button class="btn small" type="button" id="vc-b-studio" data-act="vc-studio">Check again</button>'
     +'<div class="sub">If you run <a href="https://github.com/debpalash/VoiceStudio" target="_blank" rel="noopener noreferrer">VoiceStudio</a> yourself, its voices appear in the list. It is a separate program and is not included.</div></div>';
   return out;
+}
+
+/* ----- speaking the answer (desktop app only) -----
+   The recording is made here, in the page. The listener in the desktop app turns it into words, and the words land in the
+   answer box, where the student can fix them before sending. Nothing is saved and nothing leaves the computer.
+   Two ways to record, chosen by the student and remembered:
+   - Push to talk: press Speak to start, press Stop when finished.
+   - Mic open: press Speak; it stops by itself when the student goes quiet, and listens on its own on the next turns. */
+var VM={rate:16000,max:110000,quiet:1600,wait:12000,min:0.3,cap:1200};
+var vm={state:'off',run:0,stream:null,rec:null,chunks:[],mime:'',ctx:null,src:null,an:null,buf:null,timer:null,t:0,t0:0,end:null,mode:'push',pack:'',lang:'en',note:''};
+function vmBridge(){
+  var b=window.studyDesk&&window.studyDesk.voice;
+  if(!b||typeof b.hear!=='function'||typeof window.MediaRecorder!=='function') return null;
+  var md=navigator.mediaDevices; return md&&typeof md.getUserMedia==='function'?b:null;
+}
+function vmMode(){ return vcCfg().mic==='open'?'open':'push'; }
+function vmPacks(){ var l=vc.st&&vc.st.listen; return l&&Array.isArray(l.packs)?l.packs:[]; }
+function vmFor(p){ return p.languages&&p.languages.indexOf(vc.lang)>=0; }
+function vmPack(){ return vmPacks().filter(function(p){ return p.installed&&vmFor(p); })[0]||null; }
+function vmOffer(){ return vmPacks().filter(function(p){ return !p.installed&&vmFor(p); })[0]||null; }
+/* the stopping rule for Mic open: learn the room noise for 0.4 s, then "talking" is anything clearly louder; stop after the
+   student has talked and then been quiet for a moment, give up if nobody talks, and never record for more than about 2 minutes */
+function vmNewEnd(){ return {elapsed:0,calib:0,sum:0,thr:0.02,speech:0,quiet:0,heard:false}; }
+function vmEndpoint(s,rms,dt){
+  s.elapsed+=dt;
+  if(s.calib<400){ s.calib+=dt; s.sum+=rms*dt; s.thr=Math.min(0.06,Math.max(0.02,s.sum/s.calib*3.5)); return ''; } /* the cap: a student who starts talking at once is not mistaken for room noise */
+  if(rms>s.thr){ s.speech+=dt; s.quiet=0; if(s.speech>=150) s.heard=true; }
+  else{ s.quiet+=dt; if(!s.heard) s.speech=Math.max(0,s.speech-dt); }
+  if(s.heard&&s.quiet>=VM.quiet) return 'quiet';
+  if(s.elapsed>=VM.max) return 'limit';
+  if(!s.heard&&s.elapsed>=VM.wait) return 'waited';
+  return '';
+}
+function vmGumText(e){
+  var n=e&&e.name;
+  if(n==='NotFoundError'||n==='OverconstrainedError') return 'No microphone was found. Plug one in and press Speak again, or type your answer.';
+  if(n==='NotReadableError'||n==='AbortError') return 'The microphone is in use by another program. Close that program and press Speak again, or type your answer.';
+  if(n==='NotAllowedError'||n==='SecurityError') return 'Study Desk is not allowed to use the microphone. Switch it on in your system settings (Windows: Settings, Privacy, Microphone. Mac: System Settings, Privacy & Security, Microphone), then press Speak again. You can also type your answer.';
+  return 'The microphone did not start. Try again, or type your answer.';
+}
+function vmHearText(e){
+  var k=e&&e.kind;
+  if(k==='cancelled') return '';
+  if(k==='timeout') return 'Understanding took too long. Try a shorter answer, or type it.';
+  return e&&typeof e.message==='string'&&e.message?e.message:'Your voice could not be understood. Try again, or type your answer.';
+}
+function vmClearTimer(){ if(vm.timer){ clearInterval(vm.timer); vm.timer=null; } }
+function vmRelease(){
+  vmClearTimer();
+  try{ if(vm.src) vm.src.disconnect(); }catch(e){}
+  if(vm.stream){ try{ vm.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} }
+  if(vm.ctx){ try{ vm.ctx.close(); }catch(e){} }
+  vm.stream=null; vm.src=null; vm.an=null; vm.ctx=null; vm.buf=null;
+}
+/* stop everything and throw the recording away; the caller redraws */
+function vmAbort(note){
+  var was=vm.state; vm.run++;
+  if(vm.rec){ var r=vm.rec; vm.rec=null; try{ r.onstop=null; r.ondataavailable=null; if(r.state!=='inactive') r.stop(); }catch(e){} }
+  vmRelease(); vm.chunks=[]; vm.state='off'; vm.note=note||'';
+  if(was==='working'){ var b=vcBridge(); if(b&&typeof b.cancelHear==='function'){ try{ b.cancelHear().catch(function(){}); }catch(e){} } }
+}
+function vmStart(){
+  var b=vmBridge(), pack=vmPack();
+  if(!b||!pack||vm.state!=='off'||vc.phase!=='listening'||!vc.open) return;
+  var run=++vm.run; vm.state='starting'; vm.note=''; vc.err=''; vm.mode=vmMode(); vcRender();
+  var gum; try{ gum=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}); }catch(e){ gum=Promise.reject(e); }
+  gum.then(function(stream){
+    if(run!==vm.run||!vc.open||vc.phase!=='listening'){ try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} return; }
+    vm.stream=stream;
+    try{
+      var C=window.AudioContext||window.webkitAudioContext; vm.ctx=new C(); try{ vm.ctx.resume(); }catch(e){}
+      vm.src=vm.ctx.createMediaStreamSource(stream); vm.an=vm.ctx.createAnalyser(); vm.an.fftSize=1024; vm.src.connect(vm.an); vm.buf=new Float32Array(vm.an.fftSize);
+      var mime=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].filter(function(m){ try{ return MediaRecorder.isTypeSupported(m); }catch(e){ return false; } })[0]||'';
+      var rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+      vm.rec=rec; vm.chunks=[]; vm.mime=rec.mimeType||mime;
+      rec.ondataavailable=function(e){ if(run===vm.run&&e.data&&e.data.size) vm.chunks.push(e.data); };
+      vm.end=vmNewEnd(); vm.t=vm.t0=Date.now(); vm.pack=pack.id; vm.lang=vc.lang;
+      rec.start(); vm.timer=setInterval(vmTick,60); vm.state='recording';
+    }catch(e){ vmAbort(''); vc.err=vmGumText(e); vcRender(); return; }
+    var cf=vcCfg(); if(!cf.micOk){ cf.micOk=true; vcCfgSave(); }
+    vcRender();
+  }).catch(function(e){
+    if(run!==vm.run) return;
+    vmAbort(''); vc.err=vmGumText(e);
+    if(e&&(e.name==='NotAllowedError'||e.name==='SecurityError')){ var cf=vcCfg(); if(cf.micOk){ cf.micOk=false; vcCfgSave(); } }
+    vcRender();
+  });
+}
+function vmTick(){
+  if(vm.state!=='recording'||!vm.an) return;
+  var now=Date.now(), dt=Math.min(250,Math.max(0,now-vm.t)); vm.t=now;
+  vm.an.getFloatTimeDomainData(vm.buf);
+  var s=0, i; for(i=0;i<vm.buf.length;i++) s+=vm.buf[i]*vm.buf[i];
+  var rms=Math.sqrt(s/vm.buf.length), lv=document.getElementById('vm-level');
+  if(lv) lv.style.width=Math.min(100,Math.round(rms*500))+'%';
+  var why=vmEndpoint(vm.end,rms,dt);
+  if(now-vm.t0>=VM.max) why='limit'; /* by the clock: a slowed-down timer must not stretch the limit */
+  if(why==='limit'||(vm.mode==='open'&&why==='quiet')) vmStop();
+  else if(vm.mode==='open'&&why==='waited'){ vmAbort('I did not hear anyone speak. Press Speak and try again, or type your answer.'); vcRender(); }
+}
+/* stop recording and turn what was said into words */
+function vmStop(){
+  if(vm.state!=='recording') return;
+  var run=vm.run, rec=vm.rec, packId=vm.pack, lang=vm.lang, t0=vm.t0;
+  vm.state='working'; vmClearTimer();
+  var finish=function(){
+    if(run!==vm.run) return;
+    var blob=new Blob(vm.chunks,{type:vm.mime||'audio/webm'}); vm.chunks=[]; vm.rec=null; vmRelease();
+    vmHear(run,blob,packId,lang,Date.now()-t0);
+  };
+  rec.onstop=finish;
+  try{ rec.stop(); }catch(e){ finish(); }
+  vcRender();
+}
+function vmMono(buf){
+  var n=buf.length, ch=buf.numberOfChannels, out=new Float32Array(n), c, i;
+  for(c=0;c<ch;c++){ var d=buf.getChannelData(c); for(i=0;i<n;i++) out[i]+=d[i]/ch; }
+  if(buf.sampleRate===VM.rate) return out;
+  var m=Math.max(1,Math.round(n*VM.rate/buf.sampleRate)), r=new Float32Array(m), k=buf.sampleRate/VM.rate;
+  for(i=0;i<m;i++){ var x=i*k, a=Math.floor(x), f=x-a; r[i]=out[a]*(1-f)+(out[Math.min(n-1,a+1)]*f); }
+  return r;
+}
+function vmDecode(ab){
+  return new Promise(function(res,rej){
+    var C=window.AudioContext||window.webkitAudioContext, ctx;
+    try{ ctx=new C({sampleRate:VM.rate}); }catch(e){ rej(e); return; }
+    var p=ctx.decodeAudioData(ab,function(buf){ var x; try{ x=vmMono(buf); }catch(e){ try{ ctx.close(); }catch(z){} rej(e); return; } try{ ctx.close(); }catch(z){} res(x); },function(e){ try{ ctx.close(); }catch(z){} rej(e||new Error('decode')); });
+    if(p&&p.catch) p.catch(function(){});
+  });
+}
+function vmDone(note,text){
+  vm.state='off'; vm.note=note;
+  var ta=document.getElementById('vc-ans');
+  if(text){
+    var cur=ta?ta.value:vc.answer, next=(cur?String(cur).replace(/\s+$/,'')+' ':'')+text;
+    if(next.length>VM.cap){ next=next.slice(0,VM.cap).replace(/\s+\S*$/,''); note='Your answer was long, so only the first part was kept. Check the words, then press Send.'; vm.note=note; }
+    if(ta) ta.value=next; vc.answer=next; vc.err='';
+  }
+  vcRender();
+  if(text){ var t2=document.getElementById('vc-ans'); if(t2){ try{ t2.focus(); t2.setSelectionRange(t2.value.length,t2.value.length); }catch(e){} } }
+}
+function vmHear(run,blob,packId,lang,ms){
+  var b=vmBridge(); if(!b){ vmDone('',''); return; }
+  var SHORT='That was too short. Press Speak and talk a little longer.';
+  if(!blob.size){ vmDone(SHORT,''); return; }
+  blob.arrayBuffer().then(vmDecode).then(function(x){
+    if(run!==vm.run) return;
+    if(x.length<VM.rate*VM.min){ vmDone(SHORT,''); return; }
+    return b.hear({packId:packId,lang:lang,samples:x}).then(function(r){
+      if(run!==vm.run) return;
+      var text=String(r&&r.text||'').replace(/\s+/g,' ').trim();
+      if(!text) vmDone("I didn't catch any words. Try again a little closer to the microphone, or type your answer.",'');
+      else vmDone('Check the words, fix anything that is wrong, then press Send.',text);
+    });
+  }).catch(function(e){
+    if(run!==vm.run) return;
+    if(ms<1000&&!(e&&e.kind)){ vmDone(SHORT,''); return; } /* a recording that short cannot be decoded */
+    vm.state='off'; vm.note=''; vc.err=vmHearText(e); vcRender();
+  });
+}
+function vmAuto(){
+  var c=vcCfg();
+  if(c.mic!=='open'||!c.micOk||!vmBridge()||!vmPack()||vc.answer) return;
+  setTimeout(function(){ if(vc.open&&vc.phase==='listening'&&vm.state==='off'&&!vc.answer) vmStart(); },400);
+}
+function vmInstall(id){
+  var b=vcBridge(); if(!b||vc.prog||typeof b.listenInstall!=='function') return;
+  vc.prog={packId:id,pct:0}; vc.err=''; vcRender();
+  b.listenInstall({packId:id}).then(function(){ vc.prog=null; return vcLoadStatus(); },function(e){ vc.prog=null; vc.err=e&&e.kind==='cancelled'?'':vcErrText(e); return vcLoadStatus(); });
+}
+function vmRemove(id){
+  var b=vcBridge(); if(!b||vc.prog||typeof b.listenRemove!=='function') return;
+  if(vm.pack===id&&vm.state!=='off'){ vmAbort(''); }
+  b.listenRemove({packId:id}).then(function(){ return vcLoadStatus(); },function(e){ vc.err=vcErrText(e); vcRender(); });
+}
+function vmProgHtml(p){
+  return '<div class="ai-bar vc-bar" role="progressbar" aria-label="Download progress"><i style="width:'+vc.prog.pct+'%"></i></div><div class="sub"><span class="vc-pct">'+vc.prog.pct+'%</span> downloaded</div>';
+}
+/* the microphone part of the answer form */
+function vmHtml(){
+  if(!vmBridge()||!vc.st||!vc.st.listen) return '';
+  var pack=vmPack(), offer=vmOffer(), st=vm.state, out='';
+  if(pack){
+    var rec=st==='recording', busy=st==='starting'||st==='working';
+    var label=rec?'Stop':st==='starting'?'Opening the microphone…':st==='working'?'Understanding…':'Speak your answer';
+    var hint=rec?(vm.mode==='open'?'Listening… speak now. It stops by itself when you go quiet.':'Recording… press Stop when you have finished.')
+      :st==='starting'?'Opening the microphone…':st==='working'?'Understanding what you said…':(vm.note||'Your words appear in the box below, where you can fix them before sending.');
+    out='<div class="vm-row"><button class="btn'+(rec?'':' primary')+'" type="button" id="vm-toggle" data-act="vm-toggle"'+(busy?' disabled':'')+'>'+esc(label)+'</button>'
+      +(rec?'<div class="vm-meter" aria-hidden="true"><i id="vm-level"></i></div>':'')+'</div>'
+      +'<p class="vc-note" id="vm-note" aria-live="polite">'+esc(hint)+'</p>';
+  }else if(offer){
+    var eng=vc.st.engine&&!vc.st.engine.installed?vc.st.engine.sizeBytes:0, busyDl=vc.prog&&vc.prog.packId===offer.id;
+    out='<p class="vc-note" id="vm-note">Speak instead of typing. Download the listening model once ('+esc(vcMb(offer.sizeBytes+eng))+'); after that it works without internet.'
+      +(offer.credit?' Model: '+esc(offer.credit)+(offer.license&&offer.license.name?', '+esc(offer.license.name):'')+'.':'')+'</p>'
+      +(busyDl?'<div class="vm-row"><button class="btn small" type="button" id="vm-cancel" data-act="vc-cancel-install">Cancel</button></div>'+vmProgHtml()
+        :'<div class="vm-row"><button class="btn small primary" type="button" id="vm-get" data-act="vm-install" data-id="'+esc(offer.id)+'"'+(vc.prog?' disabled':'')+' aria-label="Download the listening model: '+esc(offer.title)+'">Download</button></div>');
+  }else{
+    out='<p class="vc-note" id="vm-note">Speaking your answer is not ready for '+esc(VC_LANGNAME[vc.lang]||vc.lang)+' yet. Type your answer.</p>';
+  }
+  return '<div class="vm" data-state="'+esc(st)+'">'+out+'</div>';
+}
+function vmModeHtml(){
+  if(!vmBridge()||!vc.st||!vc.st.listen) return '';
+  var m=vmMode();
+  return '<fieldset class="vm-mode"><legend>Microphone</legend>'
+    +'<label><input type="radio" name="vm-mode" value="push"'+(m==='push'?' checked':'')+'><span><strong>Push to talk</strong>: press Speak to start and Stop when you have finished.</span></label>'
+    +'<label><input type="radio" name="vm-mode" value="open"'+(m==='open'?' checked':'')+'><span><strong>Mic open</strong>: stops by itself when you go quiet, and listens on its own on your next turns.</span></label></fieldset>';
 }
 
 /* ----- the overlay ----- */
@@ -3540,7 +3775,7 @@ function vcHtml(){
   else if(ph==='speaking') ctl='<button class="btn primary" type="button" id="vc-main" data-act="vc-pause">Pause</button><button class="btn" type="button" data-act="vc-skip">Stop</button>';
   else if(ph==='paused') ctl='<button class="btn primary" type="button" id="vc-main" data-act="vc-resume">'+(vc.err?'Try again':'Resume')+'</button><button class="btn" type="button" data-act="vc-skip">Stop</button>';
   else ctl='<button class="btn" type="button" data-act="vc-replay">Replay</button>';
-  if(ph==='listening') form='<form id="vc-form" class="vc-ans" novalidate><label class="field"><span>Your turn: explain it in your own words</span><textarea id="vc-ans" rows="3" maxlength="1200" placeholder="Type what you understood. Press Enter to send.">'+esc(vc.answer)+'</textarea></label>'
+  if(ph==='listening') form='<form id="vc-form" class="vc-ans" novalidate>'+vmHtml()+'<label class="field"><span>Your turn: explain it in your own words</span><textarea id="vc-ans" rows="3" maxlength="1200" placeholder="Type what you understood. Press Enter to send.">'+esc(vc.answer)+'</textarea></label>'
     +'<div class="actions"><button class="btn primary" type="submit">Send</button></div></form>';
   var groups=vcGroups(), cur=vcSelValue(vc.sel&&ph!=='idle'?vc.sel:vcSel());
   var vopts=groups.map(function(g){ return '<optgroup label="'+esc(g.label)+'">'+g.items.map(function(o){ return '<option value="'+esc(o.value)+'"'+(o.disabled?' disabled':'')+(o.value===cur?' selected':'')+'>'+esc(o.label)+'</option>'; }).join('')+'</optgroup>'; }).join('');
@@ -3550,11 +3785,12 @@ function vcHtml(){
     +'<p class="vc-cap'+(ph==='idle'||ph==='thinking'?' dim':'')+'" id="vc-cap" aria-live="'+(ph==='speaking'?'off':'polite')+'">'+esc(vcCapText())+'</p>'
     +'<div class="vc-ctl">'+ctl+'<span class="sub" id="vc-wait"'+(vc.waiting?'':' hidden')+'>Getting the voice ready…</span></div>'
     +form+'<div class="err" id="vc-err" role="alert">'+esc(vc.err)+'</div>'
-    +'<div class="vc-set">'+voiceSel+'<label class="field"><span>Speed</span><select id="vc-speed">'+sopts+'</select></label></div>'
+    +'<div class="vc-set">'+voiceSel+'<label class="field"><span>Speed</span><select id="vc-speed">'+sopts+'</select></label></div>'+vmModeHtml()
     +(vcBridge()?'<details class="vc-more"'+(vc.more?' open':'')+'>'+vcMoreHtml()+'</details>':'');
 }
 function vcRender(){
   var el=document.getElementById('vc'); if(!el) return;
+  if(vc.phase!=='listening'&&vm.state!=='off') vmAbort('');
   var d=el.querySelector('details'), ta=el.querySelector('#vc-ans'), had=document.activeElement, hadId=had&&el.contains(had)?had.id:null, was=vc.phaseShown;
   if(d) vc.more=d.open;
   if(ta) vc.answer=ta.value;
@@ -3566,11 +3802,12 @@ function vcRender(){
   else if(hadId) f=document.getElementById(hadId);
   if(!f&&hadId!==null) f=el.querySelector('#vc-main')||el.querySelector('#vc-ans');
   if(f&&f.focus){ try{ f.focus(); if(f.tagName==='TEXTAREA') f.setSelectionRange(f.value.length,f.value.length); }catch(e){} }
+  if(vc.phase==='listening'&&was!=='listening') vmAuto();
 }
 function vcOpen(){
   if(vc.open||!vcSupported()) return;
   var c=aiCurrent(); if(!c||!c.lessons[ai.lessonIdx]) return;
-  vc.open=true; vc.phase='idle'; vc.phaseShown=''; vc.sents=[]; vc.idx=0; vc.hist=[]; vc.err=''; vc.answer=''; vc.bufs={}; vc.more=false; vc.prog=null; vc.sel=null;
+  vmAbort(''); vc.open=true; vc.phase='idle'; vc.phaseShown=''; vc.sents=[]; vc.idx=0; vc.hist=[]; vc.err=''; vc.answer=''; vc.bufs={}; vc.more=false; vc.prog=null; vc.sel=null;
   vc.course=c.id; vc.lesson=ai.lessonIdx; vc.lang=vcLangOf(c.language,c.topic);
   var el=document.createElement('div'); el.id='vc'; el.className='vc-card'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Voice tutor');
   document.body.appendChild(el);
@@ -3583,7 +3820,7 @@ function vcOpen(){
 function vcClose(){
   if(!vc.open) return;
   var thinking=vc.phase==='thinking';
-  vc.open=false; vcHalt(true);
+  vc.open=false; vmAbort(''); vcHalt(true);
   if(thinking) aiCancel();
   if(vc.ctx){ try{ vc.ctx.close(); }catch(e){} vc.ctx=null; }
   var el=document.getElementById('vc'); if(el&&el.parentNode) el.parentNode.removeChild(el);
@@ -3601,6 +3838,9 @@ function vcAct(act,t){
   else if(act==='vc-resume'){ if(vc.phase==='paused'){ try{ vcAudioCtx(); }catch(e){} vc.phase='speaking'; vc.err=''; vcRender(); vcPlay(++vc.run); } }
   else if(act==='vc-skip'){ if(vc.phase==='speaking'||vc.phase==='paused'){ vcHalt(false); vc.err=''; vc.phase='listening'; vcRender(); } }
   else if(act==='vc-replay'){ if(vc.phase==='listening'&&vc.sents.length){ try{ vcAudioCtx(); }catch(e){} vc.idx=0; vc.phase='speaking'; vc.err=''; vcRender(); vcPlay(++vc.run); } }
+  else if(act==='vm-toggle'){ if(vm.state==='off') vmStart(); else if(vm.state==='recording') vmStop(); }
+  else if(act==='vm-install') vmInstall(t.getAttribute('data-id'));
+  else if(act==='vm-remove') vmRemove(t.getAttribute('data-id'));
   else if(act==='vc-install') vcInstall(t.getAttribute('data-id'));
   else if(act==='vc-cancel-install'){ var b=vcBridge(); if(b) b.cancel().catch(function(){}); }
   else if(act==='vc-remove') vcRemove(t.getAttribute('data-id'));
@@ -3616,12 +3856,14 @@ document.addEventListener('change',function(e){
   var t=e.target; if(!t||!vc.open) return;
   if(t.id==='vc-voice'){ vcCfg().voice=t.value; vcCfgSave(); vcRestartPiece(); }
   else if(t.id==='vc-speed'){ var s=parseFloat(t.value); if(s>0){ vcCfg().speed=s; vcCfgSave(); vcRestartPiece(); } }
+  else if(t.name==='vm-mode'){ vcCfg().mic=t.value==='open'?'open':'push'; vcCfgSave(); }
 });
 document.addEventListener('input',function(e){ var t=e.target; if(t&&t.id==='vc-ans') vc.answer=t.value; });
 document.addEventListener('keydown',function(e){
   if(!vc.open) return;
   var t=e.target;
   if(e.key==='Enter'&&t&&t.id==='vc-ans'&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); vcSend(); return; }
+  if(e.key==='Escape'&&vm.state!=='off'){ e.preventDefault(); vmAbort(''); vcRender(); return; } /* the first Escape only stops the microphone */
   if(e.key==='Escape'&&!document.querySelector('.modal')){
     var el=document.getElementById('vc');
     if(el&&el.contains(t)&&!(t&&t.id==='vc-ans'&&t.value)) vcClose();
@@ -3663,7 +3905,7 @@ document.addEventListener('click',function(e){
     case 'toggle-edit-links': ui.editLinks=!ui.editLinks; render(); break;
     case 'mv-link': moveLink(id,parseInt(t.getAttribute('data-dir'),10),true); break;
     case 'clear-samples': clearSamples(); break;
-    default: if(AI_ON&&act.indexOf('vc-')===0) vcAct(act,t); else if(AI_ON&&act.indexOf('ai-')===0) aiAct(act,t);
+    default: if(AI_ON&&(act.indexOf('vc-')===0||act.indexOf('vm-')===0)) vcAct(act,t); else if(AI_ON&&act.indexOf('ai-')===0) aiAct(act,t);
   }
 });
 document.addEventListener('submit',function(e){

@@ -67,6 +67,10 @@ Now go through `TEST-CHECKLIST.md`, sections A to C.
 
 The Local AI downloads exact pinned model and engine files. Before the first release, and whenever those files change, run the check once: on GitHub open **Actions**, pick **Verify AI catalog** on the left, **Run workflow**, **Run workflow**. A green run means every pinned file still matches its fingerprint. A red run means a file moved or changed: send Claude the log text. This covers every downloadable model (Nemotron, GLM and Qwen3). The three giant models (Nemotron 3 Super and Ultra) are list-only, have no download and are not checked.
 
+## 9. Once: check the Turkish listener (Verify Turkish listener)
+
+The Turkish speech listener lives on Hugging Face, which not every network can reach, so it is measured on GitHub's machines. On GitHub open **Actions**, pick **Verify Turkish listener**, **Run workflow**, **Run workflow**. It downloads the model, makes Turkish speech with the app's own Turkish voice, plays it through the listener and counts the wrong words. When it ends, open the run and copy the text between `===== CATALOG ENTRY` and `===== END CATALOG ENTRY =====`, plus the line that says PASS or the word-error percentage, and send them to Claude. Claude adds the entry (with the exact sizes and fingerprints) so Turkish appears in the listening list. Until then only English listeners are offered.
+
 ## If a step turns red
 
 Click the run, click the red step, copy the log text and send it to Claude. First builds sometimes need a small fix that only the real GitHub machines show.

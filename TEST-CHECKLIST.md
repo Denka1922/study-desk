@@ -132,3 +132,19 @@ K9. Press **Remove** on a voice: it goes back to "not downloaded".
 K10. Mac only: if the first voice does not start, note the message on the card and tell us. (The downloaded engine is signed on the Mac only with an ad-hoc signature.)
 K11. If you run VoiceStudio on this computer: press **Check again**; its voices appear in the voice list.
 
+## L. Speaking your answers (Windows and Mac program only)
+L1. Under **More**, **Voices and listening**, press **Download** on **English (small)**. A bar shows progress, then it says installed. Without a listener, the Voice tutor card shows a note to download one and no microphone button.
+L2. Open a lesson, start the Voice tutor, let it ask its question. Press the microphone button. **Windows:** the first time, allow the microphone. **Mac:** the system asks "Study Desk would like to access the microphone": press OK. If you pressed Don't Allow, the card says the microphone is blocked and where to change it (Windows: Settings, Privacy, Microphone; Mac: System Settings, Privacy & Security, Microphone).
+L3. **Push to talk** is selected by default. Press **Speak**, say a sentence, press **Stop**. The words appear in the answer box. Check they are right and that you can edit them, then press **Send**.
+L4. Watch the level bar while you talk: it moves with your voice and stays still when you are quiet.
+L5. Pick **Mic open**. Reload the program: **Mic open** is still selected. On the next question press the microphone button once, talk and then stay quiet: it stops by itself after a moment and fills the answer box.
+L6. Mic open: after you send that answer, on the next question the microphone should open by itself (the level bar appears). Type a few letters in the answer box first: it must NOT open then.
+L7. Mic open: say nothing for about 12 seconds. It closes and says nothing was heard. Nothing is typed.
+L8. Press **Esc** while the microphone is open: it stops first; a second **Esc** closes the card.
+L9. Switch back to **Push to talk** and check that the microphone never opens by itself.
+L10. Try a very short sound (a cough): you get "too short" or "nothing heard", not an error.
+L11. Disconnect the internet and speak: it still works (the listener is on this computer).
+L12. Press **Remove** on the listener: the microphone button goes away.
+L13. Android: there is no microphone button and nothing is asked.
+L14. Mac only: if the listener does not start, note the message on the card and tell us.
+

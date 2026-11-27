@@ -15,7 +15,7 @@ The pictures show the example entries the app starts with.
 
 The AI Tutor's **Voice tutor**, which reads the lesson and asks you to explain it back:
 
-![The Voice tutor card open on a lesson](site/shots/voice-light.webp)
+![The Voice tutor card with a spoken answer in the answer box](site/shots/voice-light.webp)
 
 Study Desk is one web page (`app/index.html`) that is packaged three ways:
 
@@ -83,7 +83,18 @@ The two downloadable voices run on your computer with the open-source [sherpa-on
 
 Why VoiceStudio is not bundled: it is a separate program under the AGPL licence and its default voice files are not free for commercial use, so Study Desk only talks to it over `127.0.0.1` when you run it yourself. Nothing of it is copied into Study Desk.
 
-Not built on purpose: **voice cloning** (copying a real person's voice) needs consent checks and clear labelling that are not designed yet, and **speaking your answer** (microphone input) is the next step; for now you type your explanation.
+Not built on purpose: **voice cloning** (copying a real person's voice) needs consent checks and clear labelling that are not designed yet.
+
+### Speaking your answers
+
+In the Windows and Mac programs you can talk to the tutor instead of typing. Under **More**, then **Voices and listening**, press **Download** on a listener once (English now: **English (accurate)**, about 104 MB, or **English (small)**, about 30 MB for older computers). After that a microphone button appears on the Voice tutor card. What you say is turned into text in the answer box, so you can fix a word before you press **Send**.
+
+You choose how the microphone behaves, and the choice is remembered:
+
+- **Push to talk** (the default): press **Speak**, talk, press **Stop**. Nothing is listened to unless you pressed the button.
+- **Mic open**: on your turn the microphone opens by itself and stops about a second and a half after you stop talking. If you say nothing for 12 seconds it closes. The first time, you press the microphone button yourself (the system asks for permission); after that it opens on its own on later turns, but only while the answer box is empty.
+
+Your voice is understood on your computer by the same open-source sherpa-onnx engine (with the Silero voice-activity detector) and is never sent anywhere. Only the microphone is ever requested (never the camera or the screen), and only for Study Desk's own page. A recording lasts at most 110 seconds. **Esc** stops it. Turkish is prepared (the `Verify Turkish listener` check in `FIRST-BUILD.md`) but is not offered for download until that check has passed. The Android app has no listener yet, so it shows no microphone button.
 
 ## Project layout
 
@@ -94,7 +105,7 @@ Not built on purpose: **voice cloning** (copying a real person's voice) needs co
 | `desktop/sync/` | Sync, PC side: the Wi-Fi server, the relay client, encryption. Runs in the main process only and stays closed until you pair a phone. |
 | `relay/` | The small internet relay (a free Cloudflare Worker you deploy yourself). It stores only encrypted data it cannot read. See `relay/README.md`. |
 | `SYNC.md` | How sync works and the exact message formats. |
-| `desktop/voice/` | The Voice tutor, PC side: the voice list, downloads, the worker that makes the sound, the cache and the VoiceStudio link. Main process only; the page only plays the sound it gets back. |
+| `desktop/voice/` | The Voice tutor, PC side: the voice list, downloads, the worker that makes the sound, the listener (speech to text: `ears-*.js`), the cache and the VoiceStudio link. Main process only; the page only plays the sound it gets back. |
 | `desktop/ai/` | The Local and CLI AI. It runs in the main process only; the page never gets a file path, command or port. |
 | `mobile/` | The Android project (Capacitor). Open `mobile/android` in Android Studio. |
 | `site/` | The download page. |
@@ -132,7 +143,7 @@ Automatic tests cover the page, settings, link rules, version handling, the down
 
 **Tested with real models (on a Linux computer at GitHub, processor only):** the real Tutor prompts and the real llama.cpp engine were run with Nemotron 3 Nano 4B, Nemotron 3.5 Bolt, Nemotron Nano 9B v2, Qwen3 4B, Qwen3 8B and GLM-4-9B. They wrote valid outlines, lessons, exams and revisions (also a Turkish lesson for Nemotron 3 Nano 4B, Nemotron 3.5 Bolt and Qwen3 8B). These runs found and fixed real problems: a 5 minute wait limit on slow computers, the engine "thinking" for minutes before answering, a model writing too many lessons, a model writing each question on one line, and models writing only three quiz questions or nine exam questions. **Sync was tested with the real PC code, the real relay code and the real page on both sides, using stand-ins only for the phone's network plug-in and the PC window (fake phone camera showing a real QR code included).** What has **not** been tested yet: a real Android phone (camera, native network call, Android's own network rules), the Windows firewall prompt, a real router, and the relay on a real Cloudflare account. `TEST-CHECKLIST.md` section J lists these steps. **Tested on real Macs (GitHub's Apple Silicon Mac with macOS 26 and Intel Mac with macOS 15, no person at the keyboard):** the workflow **Mac check** builds the Mac app, runs all tests on the Mac, opens the packaged app, checks it reads the Mac chip, downloads the real Mac engine and a real model, starts it and gets a real answer. Run it again any time: Actions, Mac check, Run workflow.
 
-**The Voice tutor was tested with the real engine on a Linux computer:** English with Kokoro and Turkish with Supertonic 3 (the Turkish letters ç ğ ı ö ş ü İ were checked) produced real sound files, and the page was tested with a scripted voice. What has **not** been tested: the downloaded engine on a real Windows PC or Mac (the Mac may ask for the engine to be allowed), listening to every voice, and VoiceStudio itself (its address list was read from its source code and is checked defensively). Kokoro was slower than real time on the test computer's processor; Supertonic was fast. `TEST-CHECKLIST.md` section K lists the steps.
+**The Voice tutor was tested with the real engine on a Linux computer:** English with Kokoro and Turkish with Supertonic 3 (the Turkish letters ç ğ ı ö ş ü İ were checked) produced real sound files, and the page was tested with a scripted voice. What has **not** been tested: the downloaded engine on a real Windows PC or Mac (the Mac may ask for the engine to be allowed), listening to every voice, the microphone on a real Windows PC or Mac (the Mac asks for microphone permission; real microphones are noisier than the test recordings), and VoiceStudio itself (its address list was read from its source code and is checked defensively). Kokoro was slower than real time on the test computer's processor; Supertonic was fast. `TEST-CHECKLIST.md` section K lists the steps.
 
 **Not run for real:** Nemotron 3.5 Lightning, Nemotron 3 Nano 30B and GLM-4.7-Flash (too big for that computer), and any model on Windows or Mac. Small models still make mistakes: always check what the Tutor tells you.
 

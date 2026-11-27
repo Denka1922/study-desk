@@ -300,7 +300,7 @@ test('the computer voice is used when nothing is downloaded: right language, spe
   assert.strictEqual(os.length, 2); assert.ok(os.every(s => s.rate === 1.2 && s.lang === 'en-US' && s.voice === 'tv-en'), JSON.stringify(os));
   assert.strictEqual((await fbCalls(page, 'speak')).length, 0, 'the desktop voice was not asked');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('study-desk-voice-v1')));
-  assert.deepStrictEqual(saved, { voice: 'os:tv-en', speed: 1.2 }, 'the choice is remembered');
+  assert.deepStrictEqual(saved, { voice: 'os:tv-en', speed: 1.2, mic: 'push', micOk: false }, 'the choice is remembered (the microphone starts as Push to talk, not yet used)');
   assert.deepStrictEqual(errors, []); await ctx.close();
 });
 

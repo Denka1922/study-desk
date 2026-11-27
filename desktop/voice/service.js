@@ -5,20 +5,33 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { platformKey } = require('./catalog');
-const { ensureEngine, ensurePack, engineInstalled, packInstalled, packDir, enginePaths } = require('./install');
+const { ensureEngine, ensurePack, ensureVad, ensureEarsPack, engineInstalled, packInstalled, vadInstalled, vadFile, packDir, enginePaths } = require('./install');
+const { RATE } = require('./ears-config');
 const { keyFor } = require('./cache');
 const { VoiceError } = require('./extract');
 
 const MAX_TEXT = 1000;
+const MIN_HEARD = Math.round(RATE * 0.25), MAX_HEARD = RATE * 120, MAX_HEARD_TEXT = 4000; // a recording is 0.25 s to 2 minutes of 16 kHz sound
 const err = (message, kind) => Object.assign(new Error(message), { kind });
 
 function createVoiceService(o) {
   const { dataDir, catalog, hardware, host, studio, cache } = o;
+  // the speech listener runs in its own worker, apart from the voice worker
+  const earsHost = o.earsHost || { loaded: () => '', stop() {}, speak: async () => { throw err('Speech input is not available.', 'engine'); } };
   const onProgress = o.onProgress || (() => {});
-  let installing = null; const speakCtls = new Set(); let studioState = { found: false, voices: [] };
+  let installing = null; const speakCtls = new Set(), hearCtls = new Set(); let studioState = { found: false, voices: [] };
 
   const packOf = id => (catalog.packs || []).find(p => p.id === id);
+  const earsPackOf = id => ((catalog.ears && catalog.ears.packs) || []).find(p => p.id === id);
   const available = () => !!platformKey(hardware.platform, hardware.arch);
+
+  function listenView(p) {
+    return { id: p.id, title: p.title, blurb: p.blurb, languages: p.languages, license: p.license, credit: p.credit, sizeBytes: p.sizeBytes, installed: packInstalled(dataDir, p) };
+  }
+  function listenState() {
+    const packs = ((catalog.ears && catalog.ears.packs) || []).map(listenView);
+    return { ready: available() && engineInstalled(dataDir, catalog, hardware) && vadInstalled(dataDir) && packs.some(p => p.installed), packs };
+  }
 
   function packView(p) {
     return { id: p.id, title: p.title, blurb: p.blurb, languages: p.languages, license: p.license, sizeBytes: p.sizeBytes, installed: packInstalled(dataDir, p),
@@ -35,31 +48,49 @@ function createVoiceService(o) {
       available: available(),
       engine: { installed: available() && engineInstalled(dataDir, catalog, hardware), sizeBytes: key ? e.wrapper.sizeBytes + e.platforms[key].sizeBytes : 0 },
       packs: (catalog.packs || []).map(packView),
+      listen: listenState(),
       studio: studioState,
       installing: installing ? installing.packId : '',
     };
   }
 
-  async function install({ packId }) {
-    const pack = packOf(packId);
-    if (!pack) throw err('That voice is not in the list.', 'bad');
+  // One install at a time for voices and listening models alike. `ears` is true for a listening model, which also needs the
+  // small shared voice-activity file.
+  async function installWith(pack, ears) {
     if (!available()) throw err('Offline voices are not available on this computer. The built-in computer voice still works.', 'engine');
     if (installing) throw err('A voice is already being installed. Wait for it to finish.', 'bad');
     const ctl = new AbortController();
-    installing = { packId, ctl };
+    installing = { packId: pack.id, ctl };
     const key = platformKey(hardware.platform, hardware.arch);
     const engBytes = engineInstalled(dataDir, catalog, hardware) ? 0 : catalog.engine.wrapper.sizeBytes + catalog.engine.platforms[key].sizeBytes;
-    const total = engBytes + (packInstalled(dataDir, pack) ? 0 : pack.sizeBytes);
+    const vadBytes = ears && !vadInstalled(dataDir) ? catalog.ears.vad.sizeBytes : 0;
+    const total = engBytes + vadBytes + (packInstalled(dataDir, pack) ? 0 : pack.sizeBytes);
     const base = { dataDir, catalog, hardware, signal: ctl.signal, download: o.download, extract: o.extract, sign: o.sign };
     try {
-      await ensureEngine({ ...base, onProgress: (d, t) => onProgress({ packId, done: Math.round(engBytes * (t > 0 ? d / t : 0)), total }) });
-      await ensurePack({ ...base, pack, onProgress: (d) => onProgress({ packId, done: engBytes + d, total }) });
-      onProgress({ packId, done: total, total });
-      return { packs: (catalog.packs || []).map(packView) };
+      await ensureEngine({ ...base, onProgress: (d, t) => onProgress({ packId: pack.id, done: Math.round(engBytes * (t > 0 ? d / t : 0)), total }) });
+      if (ears) {
+        await ensureVad({ ...base, onProgress: (d) => onProgress({ packId: pack.id, done: engBytes + Math.min(d, vadBytes), total }) });
+        await ensureEarsPack({ ...base, pack, onProgress: (d) => onProgress({ packId: pack.id, done: engBytes + vadBytes + d, total }) });
+      } else await ensurePack({ ...base, pack, onProgress: (d) => onProgress({ packId: pack.id, done: engBytes + d, total }) });
+      onProgress({ packId: pack.id, done: total, total });
     } catch (e) {
       if (e && e.code) throw err(e.message, ({ cancelled: 'cancelled', checksum: 'checksum', disk: 'disk', network: 'network', host: 'bad' })[e.code] || 'network');
       throw e;
     } finally { installing = null; }
+  }
+
+  async function install({ packId }) {
+    const pack = packOf(packId);
+    if (!pack) throw err('That voice is not in the list.', 'bad');
+    await installWith(pack, false);
+    return { packs: (catalog.packs || []).map(packView) };
+  }
+
+  async function listenInstall({ packId }) {
+    const pack = earsPackOf(packId);
+    if (!pack) throw err('That listening model is not in the list.', 'bad');
+    await installWith(pack, true);
+    return { listen: listenState() };
   }
 
   function cancelInstall() { if (installing) installing.ctl.abort(); return {}; }
@@ -72,8 +103,16 @@ function createVoiceService(o) {
     return { packs: (catalog.packs || []).map(packView) };
   }
 
+  async function listenRemove({ packId }) {
+    const pack = earsPackOf(packId);
+    if (!pack) throw err('That listening model is not in the list.', 'bad');
+    if (earsHost.loaded() === pack.id) earsHost.stop();
+    await fs.promises.rm(packDir(dataDir, pack), { recursive: true, force: true });
+    return { listen: listenState() };
+  }
+
   async function removeAll() {
-    host.stop();
+    host.stop(); earsHost.stop();
     await fs.promises.rm(path.join(dataDir, 'voice'), { recursive: true, force: true });
     return { packs: (catalog.packs || []).map(packView) };
   }
@@ -135,11 +174,41 @@ function createVoiceService(o) {
     } finally { speakCtls.delete(ctl); }
   }
 
+  // Speech to text: the page sends a recording (mono, 16 kHz, 32-bit decimals) and gets the words back.
+  async function hear(a) {
+    const pack = earsPackOf(a.packId);
+    if (!pack) throw err('That listening model is not in the list.', 'bad');
+    const lang = String(a.lang || '').toLowerCase();
+    if (!pack.languages.includes(lang)) throw err('This listening model does not understand that language. Choose another one.', 'bad');
+    const x = a.samples;
+    if (!(x instanceof Float32Array)) throw err('The recording is not valid.', 'bad');
+    if (x.length < MIN_HEARD) throw err('That recording is too short to understand.', 'bad');
+    if (x.length > MAX_HEARD) throw err('That recording is too long. Keep each answer under two minutes.', 'bad');
+    for (let i = 0; i < x.length; i++) if (!Number.isFinite(x[i])) throw err('The recording is not valid.', 'bad');
+    if (!available() || !engineInstalled(dataDir, catalog, hardware) || !vadInstalled(dataDir) || !packInstalled(dataDir, pack)) throw err('This listening model is not installed yet.', 'engine');
+    const ctl = new AbortController();
+    hearCtls.add(ctl);
+    try {
+      const p = enginePaths(dataDir, catalog, hardware);
+      const threads = Math.max(2, Math.min(4, Math.floor((os.cpus().length || 2) / 2)));
+      const spec = { key: pack.id, wrapperDir: p.wrapperDir, platformDir: p.platformDir, kind: pack.kind, packDir: packDir(dataDir, pack), threads, init: { vadModel: vadFile(dataDir), tune: pack.tune || {} } };
+      const work = earsHost.speak(spec, { samples: x });
+      const abort = new Promise((_, rej) => ctl.signal.addEventListener('abort', () => rej(err('Listening was stopped.', 'cancelled')), { once: true }));
+      work.catch(() => {});
+      let res;
+      try { res = await Promise.race([work, abort]); }
+      catch (e) { if (e instanceof VoiceError) throw err(e.message, e.kind); throw e; }
+      return { text: String((res && res.text) || '').replace(/\s+/g, ' ').trim().slice(0, MAX_HEARD_TEXT).trim() };
+    } finally { hearCtls.delete(ctl); }
+  }
+
+  function cancelHear() { for (const c of [...hearCtls]) c.abort(); earsHost.stop(); return {}; }
+
   function cancelSpeak() { for (const c of [...speakCtls]) c.abort(); host.stop(); return {}; }
 
-  function shutdown() { cancelInstall(); host.stop(); }
+  function shutdown() { cancelInstall(); host.stop(); earsHost.stop(); }
 
-  return { status, refreshStudio, install, cancelInstall, remove, removeAll, speak, cancelSpeak, shutdown };
+  return { status, refreshStudio, install, cancelInstall, remove, removeAll, speak, cancelSpeak, listenInstall, listenRemove, hear, cancelHear, shutdown };
 }
 
 module.exports = { createVoiceService, MAX_TEXT };

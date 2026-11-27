@@ -1,6 +1,6 @@
 'use strict';
 // Study Desk for Windows: one window that shows app/index.html and nothing else.
-const { app, BrowserWindow, Menu, ipcMain, session, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, session, shell, systemPreferences } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { linkAction, resolveAppFile } = require('./security');
@@ -15,6 +15,8 @@ const { registerAiIpc, createProgressSender, AI_PROGRESS_CHANNEL } = require('./
 const { registerSyncIpc } = require('./sync/ipc');
 const { loadVoiceCatalog } = require('./voice/catalog');
 const { createHost: createVoiceHost } = require('./voice/host');
+const { createEarsHost } = require('./voice/ears-host');
+const { createPermissionHandlers } = require('./permissions');
 const { createStudio } = require('./voice/studio');
 const { createCache } = require('./voice/cache');
 const { createVoiceService } = require('./voice/service');
@@ -67,6 +69,7 @@ function startVoice() {
     catalog: loadVoiceCatalog(),
     hardware: { platform: process.platform, arch: process.arch },
     host: createVoiceHost({}),
+    earsHost: createEarsHost({}),
     studio: createStudio(),
     cache,
     download: downloadVerified,
@@ -124,8 +127,14 @@ if (!app.requestSingleInstanceLock()) {
   app.on('before-quit', stopAi);
   app.on('window-all-closed', () => { stopAi(); app.quit(); });
   app.whenReady().then(() => {
-    session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => callback(false));
-    session.defaultSession.setPermissionCheckHandler(() => false);
+    // Everything is refused except the microphone (audio only) for the app's own page in the app's own window.
+    const permissions = createPermissionHandlers({
+      appFileUrl: pathToFileURL(appFile()).href,
+      isAppContents: wc => !!win && !win.isDestroyed() && wc === win.webContents,
+      askMicrophone: process.platform === 'darwin' && systemPreferences ? () => systemPreferences.askForMediaAccess('microphone') : undefined,
+    });
+    session.defaultSession.setPermissionRequestHandler(permissions.request);
+    session.defaultSession.setPermissionCheckHandler(permissions.check);
     // Windows: no menu bar. Mac: the menu bar is part of the system, and without an Edit menu
     // copy and paste do not work and Cmd+Q does nothing, so keep a minimal one.
     Menu.setApplicationMenu(process.platform === 'darwin'

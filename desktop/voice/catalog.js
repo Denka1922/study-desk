@@ -2,6 +2,7 @@
 // Catalog of the voice engine and the voice packs Study Desk may download, plus the download host allowlist for voices.
 const fs = require('node:fs');
 const path = require('node:path');
+const { EAR_KINDS, REQUIRED } = require('./ears-config');
 
 const ALLOWED = ['github.com', 'githubusercontent.com', 'huggingface.co', 'hf.co', 'registry.npmjs.org'];
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -60,7 +61,37 @@ function validateVoiceCatalog(c) {
       if (!v.name) bad.push(L + ': voice name ' + v.id);
     }
   }
+  validateEars(bad, c.ears, seen);
   return bad;
+}
+
+// The speech-listening part of the catalog: one shared voice-activity file and the listening models. A model is either one
+// tar file or a list of single files (each pinned on its own); every model must list all files its kind needs.
+function validateEars(bad, ears, seen) {
+  if (ears === undefined) return;
+  if (!ears || typeof ears !== 'object') { bad.push('listening: must be an object'); return; }
+  checkAsset(bad, 'voice activity file', ears.vad);
+  if (ears.vad && !/\.onnx$/.test(ears.vad.file || '')) bad.push('voice activity file: must be an .onnx file');
+  for (const p of ears.packs || []) {
+    const L = 'listening model ' + p.id;
+    if (!ID_RE.test(p.id || '') || seen.has(p.id)) bad.push(L + ': id');
+    seen.add(p.id);
+    if (!EAR_KINDS.includes(p.kind)) bad.push(L + ': kind');
+    if (!p.license || !p.license.name) bad.push(L + ': license missing');
+    if (!p.credit || typeof p.credit !== 'string') bad.push(L + ': credit missing');
+    if (!Array.isArray(p.languages) || !p.languages.length || !p.languages.every(l => /^[a-z]{2,3}$/.test(l))) bad.push(L + ': languages');
+    if (!/^[A-Za-z0-9._-]+$/.test(p.dir || '')) bad.push(L + ': dir');
+    const t = p.tune;
+    if (t !== undefined && !(t && typeof t === 'object' && (t.gain === undefined || (t.gain > 0 && t.gain <= 32)) && (t.context === undefined || (t.context >= 0 && t.context <= 1)))) bad.push(L + ': tune');
+    if (p.files !== undefined) {
+      if (p.file || p.url) bad.push(L + ': files cannot be combined with one archive');
+      const names = (p.files || []).map(f => f && f.file);
+      (p.files || []).forEach(f => checkAsset(bad, L + ' file ' + (f && f.file), f));
+      const need = REQUIRED[p.kind] || [];
+      if (new Set(names).size !== names.length || need.some(n => !names.includes(n)) || names.some(n => !need.includes(n))) bad.push(L + ': files must be exactly the files this kind of model needs, once each');
+      if ((p.files || []).reduce((a, f) => a + ((f && f.sizeBytes) || 0), 0) !== p.sizeBytes) bad.push(L + ': size must be the sum of the file sizes');
+    } else checkAsset(bad, L, p);
+  }
 }
 
 module.exports = { hostAllowed, loadVoiceCatalog, validateVoiceCatalog, platformKey, PLATFORMS, KINDS, ID_RE };
