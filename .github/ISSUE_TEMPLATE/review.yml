@@ -1,0 +1,30 @@
+name: Write a review
+description: Tell other students what you think of Study Desk
+title: "[Review] "
+labels: ["review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. This review is **public** on GitHub, together with your GitHub name.
+        It is shown on the download page only after the owner approves it, and there it appears **without your name**.
+        Please do not write passwords, API keys or personal details here.
+  - type: input
+    id: rating
+    attributes:
+      label: Rating
+      description: A number from 1 (poor) to 5 (great).
+    validations:
+      required: true
+  - type: input
+    id: used
+    attributes:
+      label: Used on
+      description: The Windows program, the Mac program or the Android app.
+  - type: textarea
+    id: review
+    attributes:
+      label: Your review
+      description: What do you use it for, and what is good or missing?
+    validations:
+      required: true

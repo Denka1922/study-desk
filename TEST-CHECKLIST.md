@@ -33,6 +33,8 @@ Use a Windows 64-bit PC. Download the file from the Release page or the download
 - [ ] C1. Open the page address `https://<your-github-name>.github.io/<repository-name>/`.
 - [ ] C2. It shows the version number, the date, and two buttons: **installer** and **portable**.
 - [ ] C3. Both buttons download the right file (names match the Release page).
+- [ ] C3b. Download page, section **Tell us what you think**: choose where and which part, write a sentence under **What went wrong?** and press **Open the report on GitHub**. GitHub opens in a new tab with the form already filled in (title, where, part, version, text). With fewer than 10 characters the button explains what is missing and opens nothing.
+- [ ] C3c. Same section, **Write the review on GitHub**: GitHub opens the review form with the rating, the program and the text filled in. Submit one test review, then add the label `review-approved` to it on GitHub: after a few minutes it appears under **Reviews** without any name, and the average is shown. Remove the label to hide it again. Then delete the test issue.
 - [ ] C4. The Android card says "coming soon on Google Play" until you publish or attach an APK to the release. With no APK attached to the release there is **no** APK link anywhere. With a file named `Study-Desk-<version>-android.apk` attached, the card shows **Download the Android app (APK)** with the file name and size, and on a phone the big button at the top downloads it. Once the Google Play address is set, **Get it on Google Play** comes first and the APK button stays as a second choice.
 - [ ] C5. Open the page on your phone. Nothing is cut off at the sides, and the dark mode follows the phone's setting.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k7h55zIapcGfrWiz0jAr44Kxz/IJoWYgg2tqY6nRmk8='; style-src 'sha256-qZ4f5e2924q3caPhSkrbKGJgzytsqn9s8Gm5vvxg0VI='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SrjQshh4je+RjZiQOsgcWi3D58g1I4k/rpcbyZiyazk='; style-src 'sha256-qOtCancgkSY2NwGyfsVb9GDMFlKWsgsz4jbNjMlfGSA='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <title>Study Desk: a planner for students</title>
 <meta name="description" content="Study Desk is a free student planner for Windows, Mac and Android: exams, deadlines, to-dos, grades, an AI tutor, and sync between your phone and PC.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -140,6 +140,26 @@ a:focus-visible,.btn:focus-visible,.tab:focus-visible,summary:focus-visible{outl
 .note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
 .note strong{color:var(--warn)}
 
+/* feedback */
+.fb{padding-block:56px 24px}
+.fb h2{margin-bottom:8px}
+.fb .sub{color:var(--muted);margin-bottom:24px;max-width:38em}
+.fb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.fb label{display:block;font-weight:600;margin:14px 0 4px}
+.fb select,.fb textarea{display:block;width:100%;font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+.fb textarea{resize:vertical}
+.fb select:focus-visible,.fb textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.fb-msg{min-height:1.65em;margin:10px 0 0;color:var(--exam);font-weight:600}
+.fb .btn{margin-top:4px}
+.fb .btn[aria-disabled="true"]{opacity:.6}
+.rv-sum{font-weight:650;margin:4px 0 0}
+.rv-list{list-style:none;margin:8px 0 0;padding:0}
+.rv-list li{border-top:1px solid var(--line);padding:12px 0}
+.rv-stars{color:var(--accent);letter-spacing:2px;font-size:1.05rem}
+.rv-text{margin:4px 0 2px;white-space:pre-line;overflow-wrap:anywhere}
+.rv-by{margin:0}
+.rv-write{border-top:1px solid var(--line);margin-top:16px;padding-top:4px}
+
 /* questions */
 .faq{padding-block:56px 64px}
 .faq h2{margin-bottom:20px}
@@ -164,6 +184,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
   .extras{grid-template-columns:minmax(0,1fr);gap:24px}
   .extras div,.extras div:first-child{padding:0;border-left:0}
   .phone{right:8px;width:24%}
+  .fb-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:720px){
   .bar nav a:not(.cta){display:none}
@@ -182,6 +203,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
       <a href="#features">What's inside</a>
       <a href="#tutor">AI Tutor</a>
       <a href="#sync">Sync</a>
+      <a href="#feedback" id="nav-feedback" hidden>Feedback</a>
       <a href="#faq">Questions</a>
       <a class="cta" href="#download">Download</a>
     </nav>
@@ -411,6 +433,70 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     </div>
   </div>
 
+  <div class="wrap fb" id="feedback" hidden aria-labelledby="fb-h">
+    <h2 id="fb-h">Tell us what you think</h2>
+    <p class="sub">Both forms open on GitHub, so you need a free GitHub account. Nothing is sent from this page. What you write there is public, together with your GitHub name, so never write passwords, API keys or personal details.</p>
+    <div class="fb-grid">
+      <section class="card" aria-labelledby="bug-h">
+        <h3 id="bug-h">Report a problem</h3>
+        <p class="fine">Something broken? Describe it here, then check it and send it on GitHub.</p>
+        <label for="bug-where">Where did it happen?</label>
+        <select id="bug-where">
+          <option value="Windows program">Windows program</option>
+          <option value="Mac program">Mac program</option>
+          <option value="Android app">Android app</option>
+          <option value="This website">This website</option>
+          <option value="Other">Other</option>
+        </select>
+        <label for="bug-area">Which part?</label>
+        <select id="bug-area">
+          <option value="Calendar">Calendar</option>
+          <option value="To-do list">To-do list</option>
+          <option value="Grades">Grades</option>
+          <option value="AI Tutor">AI Tutor</option>
+          <option value="Voice tutor">Voice tutor</option>
+          <option value="Sync">Sync</option>
+          <option value="Installing or updating">Installing or updating</option>
+          <option value="Something else">Something else</option>
+        </select>
+        <label for="bug-what">What went wrong?</label>
+        <textarea id="bug-what" rows="4" maxlength="3000" autocomplete="off"></textarea>
+        <label for="bug-steps">How can we repeat it? (optional)</label>
+        <textarea id="bug-steps" rows="3" maxlength="3000" autocomplete="off"></textarea>
+        <p class="fb-msg" id="bug-msg" role="status"></p>
+        <a class="btn" id="bug-go" target="_blank" rel="noopener noreferrer">Open the report on GitHub</a>
+      </section>
+      <section class="card" aria-labelledby="rv-h">
+        <h3 id="rv-h">Reviews</h3>
+        <p class="rv-sum" id="rv-summary" hidden></p>
+        <ul class="rv-list" id="rv-list"></ul>
+        <p class="fine" id="rv-status" role="status"></p>
+        <p class="fine">Only real reviews appear here. They are written on GitHub and shown after the owner approves them, without the writer's name.</p>
+        <div class="rv-write">
+          <label for="rv-rating">Your rating</label>
+          <select id="rv-rating">
+            <option value="5">5 - Great</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - OK</option>
+            <option value="2">2 - Poor</option>
+            <option value="1">1 - Bad</option>
+          </select>
+          <label for="rv-where">Which one do you use?</label>
+          <select id="rv-where">
+            <option value="Windows program">Windows program</option>
+            <option value="Mac program">Mac program</option>
+            <option value="Android app">Android app</option>
+            <option value="Other">Other</option>
+          </select>
+          <label for="rv-text">Your review</label>
+          <textarea id="rv-text" rows="3" maxlength="1500" autocomplete="off"></textarea>
+          <p class="fb-msg" id="rv-msg" role="status"></p>
+          <a class="btn" id="rv-go" target="_blank" rel="noopener noreferrer">Write the review on GitHub</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
   <div class="wrap faq" id="faq">
     <h2>Questions</h2>
     <details>
@@ -555,6 +641,8 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     const when = typeof rel.published_at === 'string' ? new Date(rel.published_at) : null;
     const dateText = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     $('version').textContent = tag;
+    relVersion = tag;
+    bugRefresh();
     $('date').textContent = dateText;
     if (tag) $('hero-meta').textContent = 'Version ' + tag + (dateText ? ' · ' + dateText : '') + '. Free and open source.';
     const installer = pick(rel.assets, /^Study-Desk-Setup-.+\.exe$/, repo);
@@ -588,10 +676,149 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     setState('loaded');
   }
 
+  // ---- Feedback: opens a filled-in GitHub issue form. Nothing is sent from this page. ----
+  let fbBase = '';
+  let relVersion = '';
+  const MAX_ADDRESS = 7000; // GitHub refuses very long addresses
+
+  function clean(v, n) {
+    return String(v == null ? '' : v).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
+  }
+
+  // fields: the answers; longKeys: the ones that are cut shorter if the address gets too long
+  function issueUrl(template, fields, longKeys) {
+    const f = Object.assign({}, fields);
+    for (let i = 0; i < 12; i++) {
+      const q = new URLSearchParams();
+      q.set('template', template);
+      for (const k of Object.keys(f)) if (f[k] !== '') q.set(k, f[k]);
+      const u = fbBase + '/issues/new?' + q.toString().replace(/\+/g, '%20');
+      if (u.length <= MAX_ADDRESS) return u;
+      for (const k of longKeys) f[k] = f[k].slice(0, Math.floor(f[k].length * 0.8));
+    }
+    return fbBase + '/issues/new?template=' + template;
+  }
+
+  function setGo(id, msgId, url, ok) {
+    const a = $(id);
+    a.href = url;
+    if (ok) a.removeAttribute('aria-disabled'); else a.setAttribute('aria-disabled', 'true');
+    if (ok && $(msgId).dataset.warn === '1') { $(msgId).textContent = ''; $(msgId).dataset.warn = ''; }
+  }
+
+  function bugRefresh() {
+    if (!fbBase) return false;
+    const what = clean($('bug-what').value, 1500), steps = clean($('bug-steps').value, 1500);
+    const where = $('bug-where').value, area = $('bug-area').value;
+    const title = '[Bug] ' + area + (what ? ': ' + what.split('\n')[0].slice(0, 60) : '');
+    const ok = what.length >= 10;
+    setGo('bug-go', 'bug-msg', issueUrl('bug_report.yml', { title, where, area, version: relVersion, what, steps }, ['what', 'steps']), ok);
+    return ok;
+  }
+
+  function reviewRefresh() {
+    if (!fbBase) return false;
+    const rating = $('rv-rating').value, used = $('rv-where').value, review = clean($('rv-text').value, 1000);
+    const ok = /^[1-5]$/.test(rating) && review.length >= 10;
+    setGo('rv-go', 'rv-msg', issueUrl('review.yml', { title: '[Review] ' + rating + ' out of 5', rating, used, review }, ['review']), ok);
+    return ok;
+  }
+
+  function goClick(id, msgId, textId, refresh, warning) {
+    $(id).addEventListener('click', e => {
+      const msg = $(msgId);
+      if (!refresh()) {
+        e.preventDefault();
+        msg.textContent = warning; msg.dataset.warn = '1';
+        $(textId).focus();
+      } else {
+        msg.textContent = 'GitHub opens in a new tab. Check the text there, then press Submit new issue.'; msg.dataset.warn = '';
+      }
+    });
+  }
+
+  function initFeedback(repo) {
+    fbBase = 'https://github.com/' + repo.owner + '/' + repo.repo;
+    $('feedback').hidden = false;
+    $('nav-feedback').hidden = false;
+    for (const id of ['bug-where', 'bug-area', 'bug-what', 'bug-steps']) for (const ev of ['input', 'change']) $(id).addEventListener(ev, bugRefresh);
+    for (const id of ['rv-rating', 'rv-where', 'rv-text']) for (const ev of ['input', 'change']) $(id).addEventListener(ev, reviewRefresh);
+    goClick('bug-go', 'bug-msg', 'bug-what', bugRefresh, 'Tell us what went wrong in a few words first.');
+    goClick('rv-go', 'rv-msg', 'rv-text', reviewRefresh, 'Write a few words about what you think first.');
+    bugRefresh(); reviewRefresh();
+    loadReviews(repo);
+  }
+
+  // One approved review from a GitHub issue made with the review form (its headings are read back). Anything else gives null.
+  function parseReview(it) {
+    if (!it || typeof it !== 'object' || it.pull_request || typeof it.body !== 'string') return null;
+    const body = it.body.replace(/\r\n?/g, '\n');
+    const part = name => {
+      const m = new RegExp('###[ \\t]+' + name + '[ \\t]*\\n+([\\s\\S]*?)(?=\\n+###[ \\t]|$)').exec(body);
+      const v = m ? m[1].trim() : '';
+      return v === '_No response_' ? '' : v;
+    };
+    const r = /^([1-5])(?![0-9])/.exec(part('Rating'));
+    const text = part('Your review').slice(0, 600);
+    if (!r || text.length < 5) return null;
+    const when = typeof it.created_at === 'string' ? new Date(it.created_at) : null;
+    const date = !when || isNaN(when) ? '' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
+    return { rating: Number(r[1]), text, used: part('Used on').slice(0, 40), date };
+  }
+
+  function showReviews(rows) {
+    const list = $('rv-list');
+    list.textContent = '';
+    for (const r of rows) {
+      const li = document.createElement('li');
+      const stars = document.createElement('span');
+      stars.className = 'rv-stars';
+      stars.setAttribute('role', 'img');
+      stars.setAttribute('aria-label', r.rating + ' out of 5');
+      stars.textContent = '\u2605'.repeat(r.rating) + '\u2606'.repeat(5 - r.rating);
+      const p = document.createElement('p');
+      p.className = 'rv-text';
+      p.textContent = r.text;
+      const by = document.createElement('p');
+      by.className = 'fine rv-by';
+      by.textContent = [r.used, r.date].filter(Boolean).join(' \u00B7 ');
+      li.append(stars, p, by);
+      list.appendChild(li);
+    }
+    const sum = $('rv-summary');
+    if (rows.length) {
+      const avg = rows.reduce((a, r) => a + r.rating, 0) / rows.length;
+      sum.textContent = (Math.round(avg * 10) / 10) + ' out of 5 from ' + rows.length + (rows.length === 1 ? ' review' : ' reviews');
+      sum.hidden = false;
+      $('rv-status').textContent = '';
+    } else {
+      sum.hidden = true;
+      $('rv-status').textContent = 'No reviews yet. You could write the first one.';
+    }
+  }
+
+  async function loadReviews(repo) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 10000);
+    try {
+      const r = await fetch('https://api.github.com/repos/' + repo.owner + '/' + repo.repo + '/issues?labels=review-approved&state=open&per_page=30',
+        { headers: { Accept: 'application/vnd.github+json' }, signal: ctl.signal, cache: 'no-store' });
+      if (!r.ok) throw new Error('status ' + r.status);
+      const data = await r.json();
+      if (!Array.isArray(data)) throw new Error('unexpected reply');
+      showReviews(data.map(parseReview).filter(Boolean).slice(0, 20));
+    } catch (e) {
+      $('rv-status').textContent = 'Reviews could not be loaded right now.';
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function load() {
     const repo = repoFromAddress();
     if (!repo) { setState('error'); return; }
     showRepoLinks(repo);
+    initFeedback(repo);
     const link = document.createElement('a');
     link.id = 'releases-link';
     link.href = 'https://github.com/' + repo.owner + '/' + repo.repo + '/releases/latest';

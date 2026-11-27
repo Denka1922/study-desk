@@ -75,6 +75,21 @@ The Turkish speech listener lives on Hugging Face, which not every network can r
 
 GitHub does not build the Android app. If you want a direct download next to Google Play, build and sign the app yourself in Android Studio, then attach the file to the release: on GitHub open **Releases**, the release, **Edit**, drag the file into the box at the bottom, **Update release**. The file must be named `Study-Desk-<version>-android.apk` (for example `Study-Desk-1.0.2-android.apk`). The download page shows it within a few minutes. People who install it this way must allow "install unknown apps", and it does not update itself, so attach the new file to each new release. Never put the keystore or its password in the repository.
 
+## 11. Optional: bug reports and reviews on the download page
+
+The download page has a **Tell us what you think** section. Nothing is sent from the page: the buttons open a filled-in form on GitHub, so people need a free GitHub account, and what they write is public.
+
+One-time setup on GitHub:
+1. **Settings**, then **General**, then **Features**: tick **Issues** (it must be on).
+2. **Issues**, then **Labels**, then **New label**: create one called exactly `review-approved`. (`bug` already exists; `review` is created the first time someone uses the review form, or create it too.)
+
+How it works:
+- **Bug reports** arrive as normal issues with the label `bug`. Nothing else to do.
+- **Reviews** arrive as issues with the label `review`. They do **not** appear on the page by themselves. Read one, and if it is fair and clean, open it and add the label `review-approved`: it appears on the page within minutes, without the writer's name. To take one down, remove that label.
+- Only the **first 20** approved reviews are shown, newest first.
+- A writer can still edit their issue after you approved it. If a review is changed into something bad, remove the label.
+- The page shows "No reviews yet" until you approve one. Reviews are never made up.
+
 ## If a step turns red
 
 Click the run, click the red step, copy the log text and send it to Claude. First builds sometimes need a small fix that only the real GitHub machines show.

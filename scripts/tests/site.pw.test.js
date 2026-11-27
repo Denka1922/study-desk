@@ -36,7 +36,7 @@ function pageSource(playUrl) {
   return SRC.replace(script, () => changed).replace(old, h);
 }
 
-async function open(browser, { api = { status: 200, body: release() }, url = PAGE, play, width = 1280, scheme = 'light', wait = true, ua } = {}) {
+async function open(browser, { api = { status: 200, body: release() }, issues = { status: 200, body: [] }, url = PAGE, play, width = 1280, scheme = 'light', wait = true, ua } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, ...(ua ? { userAgent: ua } : {}) });
   const page = await ctx.newPage();
   const errs = []; const hosts = new Set();
@@ -46,6 +46,10 @@ async function open(browser, { api = { status: 200, body: release() }, url = PAG
   page.on('request', r => hosts.add(new URL(r.url()).host));
   await page.route('**/*', async route => {
     const u = route.request().url();
+    if (u.startsWith('https://api.github.com/repos/alice/study-desk/issues')) { // the approved reviews
+      if (issues.abort) return route.abort();
+      return route.fulfill({ status: issues.status, contentType: 'application/json', body: typeof issues.body === 'string' ? issues.body : JSON.stringify(issues.body) });
+    }
     if (u.startsWith('https://api.github.com/')) {
       if (api.abort) return route.abort();
       if (api.delay) await new Promise(r => setTimeout(r, api.delay));
@@ -402,4 +406,111 @@ test('the page has one main heading, labelled sections and no sideways scrolling
   await page.locator('#faq summary').first().focus();
   await page.keyboard.press('Enter');
   assert.ok(await page.locator('#faq details').first().evaluate(d => d.open));
+}));
+
+// ---------------------------------------------------------------- feedback: bug reports and reviews
+const issue = (rating, used, text, over = {}) => ({ number: 7, state: 'open', created_at: '2026-11-20T10:00:00Z', user: { login: 'secret-student' },
+  body: '### Rating\n\n' + rating + '\n\n### Used on\n\n' + used + '\n\n### Your review\n\n' + text, ...over });
+
+test('Feedback: the bug form opens a GitHub issue form with the answers, from this repository only', () => withBrowser(async b => {
+  const { page, ctx, errs } = await open(b);
+  assert.strictEqual(await page.locator('#feedback').isVisible(), true);
+  await page.selectOption('#bug-where', 'Android app'); await page.selectOption('#bug-area', 'Voice tutor');
+  const what = 'The tutor stops after the first line & says "ı ğ ü ş İ" #1 100% \nSecond line', steps = 'Open a lesson\nPress Voice tutor';
+  await page.fill('#bug-what', what); await page.fill('#bug-steps', steps);
+  const u = new URL(await href(page, '#bug-go'));
+  assert.strictEqual(u.origin + u.pathname, 'https://github.com/alice/study-desk/issues/new');
+  const q = u.searchParams;
+  assert.strictEqual(q.get('template'), 'bug_report.yml');
+  assert.match(q.get('title'), /^\[Bug\] .*Voice tutor/);
+  assert.strictEqual(q.get('where'), 'Android app'); assert.strictEqual(q.get('area'), 'Voice tutor');
+  assert.strictEqual(q.get('what'), what); assert.strictEqual(q.get('steps'), steps); assert.strictEqual(q.get('version'), '1.2.0');
+  assert.deepStrictEqual([...q.keys()].sort(), ['area', 'steps', 'template', 'title', 'version', 'what', 'where']);
+  const popup = ctx.waitForEvent('page'); await page.click('#bug-go'); const pg = await popup;
+  assert.match(pg.url(), /^https:\/\/github\.com\/alice\/study-desk\/issues\/new\?/);
+  assert.deepStrictEqual(errs, []);
+}));
+
+test('Feedback: a bug report needs a few words, and very long text is cut so the address stays usable', () => withBrowser(async b => {
+  const { page, ctx } = await open(b);
+  let opened = 0; ctx.on('page', () => opened++);
+  await page.fill('#bug-what', 'broken');
+  await page.click('#bug-go', { force: true }); await page.waitForTimeout(300); // a person can still press it: it explains what is missing
+  assert.strictEqual(opened, 0, 'nothing opens for a too-short report');
+  assert.match(await page.locator('#bug-msg').innerText(), /Tell us what went wrong/i);
+  assert.strictEqual(await page.locator('#bug-go').getAttribute('aria-disabled'), 'true');
+  await page.fill('#bug-what', 'x'.repeat(5000)); await page.fill('#bug-steps', 'y'.repeat(5000));
+  const href1 = await href(page, '#bug-go'), q = new URL(href1).searchParams;
+  assert.ok(q.get('what').length <= 1500 && q.get('steps').length <= 1500); assert.ok(href1.length < 7000, 'address length ' + href1.length);
+  assert.strictEqual(await page.locator('#bug-go').getAttribute('aria-disabled'), null);
+}));
+
+test('Feedback: reviews come only from approved GitHub issues of this repository, are shown as plain text without names, and are averaged', () => withBrowser(async b => {
+  const bad = [issue(5, 'Windows program', 'This pull request is not a review at all', { pull_request: { url: 'x' } }), issue(9, 'Mac program', 'Rating out of range, must be ignored'),
+    issue('', 'Mac program', 'No rating at all, must be ignored'), issue(3, 'Mac program', 'ok')];
+  const good = [issue(5, 'Android app', 'Great for exams <img src=x onerror=alert(1)> <b>bold</b> https://evil.example/'), issue(4, 'Windows program', 'Clean and fast, the calendar is what I use every day.')];
+  const { page, errs, hosts } = await open(b, { issues: { status: 200, body: [...good, ...bad] } });
+  await page.waitForSelector('#rv-list li');
+  assert.strictEqual(await page.locator('#rv-list li').count(), 2);
+  const t = await page.locator('#rv-list').innerText();
+  assert.ok(t.includes('<img src=x onerror=alert(1)> <b>bold</b>'), 'shown as plain text');
+  assert.strictEqual(await page.locator('#rv-list img, #rv-list b, #rv-list a').count(), 0);
+  assert.match(t, /Android app/); assert.match(t, /Windows program/); assert.ok(!/pull request is not|out of range|No rating at all/.test(t));
+  assert.ok(!(await page.locator('body').innerText()).includes('secret-student'), 'no GitHub names');
+  assert.strictEqual(await page.locator('#rv-list li').first().locator('[role="img"]').getAttribute('aria-label'), '5 out of 5');
+  assert.match(await page.locator('#rv-summary').innerText(), /4\.5 out of 5/); assert.match(await page.locator('#rv-summary').innerText(), /2 reviews/);
+  assert.deepStrictEqual(errs, []);
+  for (const h of hosts) assert.ok(['alice.github.io', 'api.github.com'].includes(h), 'unexpected host ' + h);
+}));
+
+test('Feedback: the reviews request asks for the approved label only, from this repository', () => withBrowser(async b => {
+  const urls = [];
+  const { page } = await open(b, { wait: false });
+  page.on('request', r => { if (r.url().includes('/issues?')) urls.push(r.url()); });
+  await page.reload(); await page.waitForFunction(() => document.querySelector('#state').dataset.state !== 'loading');
+  await page.waitForTimeout(300);
+  assert.strictEqual(urls.length, 1); const u = new URL(urls[0]);
+  assert.strictEqual(u.pathname, '/repos/alice/study-desk/issues'); assert.strictEqual(u.searchParams.get('labels'), 'review-approved'); assert.strictEqual(u.searchParams.get('state'), 'open');
+}));
+
+test('Feedback: no reviews gives an honest empty message, and a failed request a plain message; writing still works', () => withBrowser(async b => {
+  const a = await open(b);
+  await a.page.waitForFunction(() => document.querySelector('#rv-status').textContent.length > 0);
+  assert.match(await a.page.locator('#rv-status').innerText(), /No reviews yet/);
+  assert.strictEqual(await a.page.locator('#rv-list li').count(), 0); assert.strictEqual(await a.page.locator('#rv-summary').isVisible(), false);
+  for (const issues of [{ status: 403, body: { message: 'rate limit' } }, { status: 200, body: '{not json' }, { status: 200, body: { not: 'a list' } }, { abort: true }]) {
+    const x = await open(b, { issues });
+    await x.page.waitForFunction(() => document.querySelector('#rv-status').textContent.length > 0);
+    assert.match(await x.page.locator('#rv-status').innerText(), /could not be loaded/i, JSON.stringify(issues).slice(0, 40));
+    assert.strictEqual(await x.page.locator('#rv-go').isVisible(), true); assert.deepStrictEqual(x.errs, []);
+  }
+}));
+
+test('Feedback: writing a review opens the review form with rating, place and text; the rating is 1 to 5 and the text needs a few words', () => withBrowser(async b => {
+  const { page, ctx } = await open(b);
+  let opened = 0; ctx.on('page', () => opened++);
+  await page.selectOption('#rv-rating', '4'); await page.selectOption('#rv-where', 'Windows program'); await page.fill('#rv-text', 'short');
+  await page.click('#rv-go', { force: true }); await page.waitForTimeout(300); assert.strictEqual(opened, 0);
+  assert.match(await page.locator('#rv-msg').innerText(), /few words/i);
+  const text = 'It keeps my exams and deadlines in one place, ı ğ ü.';
+  await page.fill('#rv-text', text);
+  const u = new URL(await href(page, '#rv-go')), q = u.searchParams;
+  assert.strictEqual(u.origin + u.pathname, 'https://github.com/alice/study-desk/issues/new');
+  assert.strictEqual(q.get('template'), 'review.yml'); assert.strictEqual(q.get('rating'), '4'); assert.strictEqual(q.get('used'), 'Windows program'); assert.strictEqual(q.get('review'), text);
+  assert.match(q.get('title'), /^\[Review\] 4 out of 5/); assert.deepStrictEqual([...q.keys()].sort(), ['rating', 'review', 'template', 'title', 'used']);
+  assert.deepStrictEqual(await page.locator('#rv-rating option').evaluateAll(o => o.map(x => x.value)), ['5', '4', '3', '2', '1']);
+  const popup = ctx.waitForEvent('page'); await page.click('#rv-go'); assert.match((await popup).url(), /^https:\/\/github\.com\/alice\/study-desk\/issues\/new\?/);
+}));
+
+test('Feedback: the section is hidden when the project address is not known (no wrong links)', () => withBrowser(async b => {
+  const { page } = await open(b, { url: 'https://example.com/' });
+  assert.strictEqual(await page.locator('#feedback').isVisible(), false);
+  assert.strictEqual(await page.locator('#bug-go').getAttribute('href'), null);
+}));
+
+test('Feedback: the page says what is public, and the top menu links to it', () => withBrowser(async b => {
+  const { page } = await open(b);
+  const t = await page.locator('#feedback').innerText();
+  assert.match(t, /GitHub account/i); assert.match(t, /public/i); assert.match(t, /approve/i); assert.match(t, /(password|key)/i);
+  assert.strictEqual(await page.locator('.bar nav a[href="#feedback"]').count(), 1);
 }));

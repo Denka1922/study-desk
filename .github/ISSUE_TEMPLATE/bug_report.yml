@@ -1,0 +1,37 @@
+name: Report a problem
+description: Something in Study Desk does not work the way it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping. This report is **public** on GitHub, together with your GitHub name.
+        Please do not write passwords, API keys or personal details (real name, school, address, e-mail) here, and black out anything private in a screenshot.
+  - type: input
+    id: where
+    attributes:
+      label: Where did it happen?
+      description: The Windows program, the Mac program, the Android app, or this website.
+  - type: input
+    id: area
+    attributes:
+      label: Which part?
+      description: For example Calendar, To-do list, Grades, AI Tutor, Voice tutor or Sync.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown on the download page. Leave empty if you do not know it.
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we repeat it?
+      description: The steps you took, one per line.
