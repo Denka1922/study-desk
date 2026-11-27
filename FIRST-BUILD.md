@@ -71,6 +71,10 @@ The Local AI downloads exact pinned model and engine files. Before the first rel
 
 The Turkish speech listener lives on Hugging Face, which not every network can reach, so it is measured on GitHub's machines. On GitHub open **Actions**, pick **Verify Turkish listener**, **Run workflow**, **Run workflow**. It downloads the model, makes Turkish speech with the app's own Turkish voice, plays it through the listener and counts the wrong words. When it ends, open the run and copy the text between `===== CATALOG ENTRY` and `===== END CATALOG ENTRY =====`, plus the line that says PASS or the word-error percentage, and send them to Claude. Claude adds the entry (with the exact sizes and fingerprints) so Turkish appears in the listening list. Until then only English listeners are offered.
 
+## 10. Optional: offer the Android APK on the download page
+
+GitHub does not build the Android app. If you want a direct download next to Google Play, build and sign the app yourself in Android Studio, then attach the file to the release: on GitHub open **Releases**, the release, **Edit**, drag the file into the box at the bottom, **Update release**. The file must be named `Study-Desk-<version>-android.apk` (for example `Study-Desk-1.0.2-android.apk`). The download page shows it within a few minutes. People who install it this way must allow "install unknown apps", and it does not update itself, so attach the new file to each new release. Never put the keystore or its password in the repository.
+
 ## If a step turns red
 
 Click the run, click the red step, copy the log text and send it to Claude. First builds sometimes need a small fix that only the real GitHub machines show.

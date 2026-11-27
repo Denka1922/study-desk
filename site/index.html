@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5wLKdKimRWLjWJYm2KlEXAsJQimeT9KfqE9fuwCnjwQ='; style-src 'sha256-DNDkOun6W4Kk/u9lQS15u1ctrZ559gcT+az8xb+iS+Q='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k7h55zIapcGfrWiz0jAr44Kxz/IJoWYgg2tqY6nRmk8='; style-src 'sha256-qZ4f5e2924q3caPhSkrbKGJgzytsqn9s8Gm5vvxg0VI='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <title>Study Desk: a planner for students</title>
 <meta name="description" content="Study Desk is a free student planner for Windows, Mac and Android: exams, deadlines, to-dos, grades, an AI tutor, and sync between your phone and PC.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -136,7 +136,7 @@ a:focus-visible,.btn:focus-visible,.tab:focus-visible,summary:focus-visible{outl
 .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .steps{margin:8px 0 0;padding-left:20px}
 .steps li{margin-bottom:4px}
-#file-list li,#mac-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
+#file-list li,#mac-list li,#apk-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
 .note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
 .note strong{color:var(--warn)}
 
@@ -404,7 +404,9 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
       <section class="card" id="android-card" role="tabpanel" aria-labelledby="tab-android" hidden>
         <h3 id="and-h">Android</h3>
         <p id="android-text">Android: coming soon on Google Play</p>
-        <p class="muted">When it is published, install it from Google Play like any other app.</p>
+        <div class="btns" id="apk-btns" hidden></div>
+        <ul id="apk-list" hidden></ul>
+        <p class="muted" id="android-note">When it is published, install it from Google Play like any other app.</p>
       </section>
     </div>
   </div>
@@ -465,6 +467,8 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
   const $ = id => document.getElementById(id);
   let firstTab = 'windows';
   let installerUrl = '';
+  let apkUrl = '';
+  let playUrl = '';
 
   function setState(s) {
     $('state').dataset.state = s;
@@ -542,6 +546,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
       a.textContent = 'Download for Mac';
     } else {
       a.textContent = 'Get the Android app';
+      if (apkUrl && !playUrl) { a.href = apkUrl; a.rel = 'noopener'; }
     }
   }
 
@@ -566,6 +571,14 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     for (const m of mac) {
       const f = pick(rel.assets, m[2], repo);
       if (f) { button('mac-btns', 'mac-list', m[0], 'Download for ' + m[1], f, m[3]); macCount++; }
+    }
+    const apk = pick(rel.assets, /^Study-Desk-.+-android\.apk$/, repo);
+    if (apk) {
+      apkUrl = apk.url;
+      $('apk-btns').hidden = false; $('apk-list').hidden = false;
+      button('apk-btns', 'apk-list', 'btn-apk', 'Download the Android app (APK)', apk, !!playUrl);
+      if (!playUrl) $('android-text').textContent = 'Download the Android app from this page.';
+      $('android-note').textContent = 'To install it, open the downloaded file. If Android asks, allow your browser to install unknown apps. This version does not update itself: to update, download the new file from this page.';
     }
     const winCount = (installer ? 1 : 0) + (portable ? 1 : 0);
     $('win-empty').hidden = winCount > 0;
@@ -609,6 +622,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
       ok = x.protocol === 'https:' && x.hostname === 'play.google.com' && x.pathname === '/store/apps/details' && x.searchParams.get('id') === PLAY_ID;
     } catch (e) { ok = false; }
     if (!ok) return;
+    playUrl = x.href;
     $('android-text').textContent = 'The Android app is on Google Play.';
     const a = document.createElement('a');
     a.id = 'android-link';

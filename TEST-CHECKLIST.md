@@ -33,7 +33,7 @@ Use a Windows 64-bit PC. Download the file from the Release page or the download
 - [ ] C1. Open the page address `https://<your-github-name>.github.io/<repository-name>/`.
 - [ ] C2. It shows the version number, the date, and two buttons: **installer** and **portable**.
 - [ ] C3. Both buttons download the right file (names match the Release page).
-- [ ] C4. The Android card says "coming soon on Google Play" until you publish. There is **no** APK link anywhere.
+- [ ] C4. The Android card says "coming soon on Google Play" until you publish or attach an APK to the release. With no APK attached to the release there is **no** APK link anywhere. With a file named `Study-Desk-<version>-android.apk` attached, the card shows **Download the Android app (APK)** with the file name and size, and on a phone the big button at the top downloads it. Once the Google Play address is set, **Get it on Google Play** comes first and the APK button stays as a second choice.
 - [ ] C5. Open the page on your phone. Nothing is cut off at the sides, and the dark mode follows the phone's setting.
 
 ## D. Android app (after you build it in Android Studio, before uploading to Google Play)

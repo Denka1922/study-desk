@@ -39,7 +39,9 @@ function staticRules(h) {
   assert.strictEqual(dirs['base-uri'], "'none'");
   assert.strictEqual(dirs['form-action'], "'none'");
   assert.deepStrictEqual(Object.keys(dirs).sort(), ['base-uri', 'connect-src', 'default-src', 'form-action', 'img-src', 'script-src', 'style-src']);
-  assert.ok(!/apk/i.test(h));
+  // The page may offer an APK only if the release has one (found through the GitHub reply). No address of an APK file is written into the page.
+  assert.ok(!/https?:\/\/[^\s"']*\.apk/i.test(h), 'no hard-coded APK address');
+  assert.ok(!/href="[^"]*\.apk/i.test(h), 'no APK link in the markup');
   const code = h.match(/<script>([\s\S]*?)<\/script>/)[1];
   assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/.test(code));
   // empty when shipped; after publishing, the user pastes this app's Play Store address

@@ -23,7 +23,7 @@ Study Desk is one web page (`app/index.html`) that is packaged three ways:
 |---|---|---|
 | Windows | Electron program (installer and portable `.exe`) | built by GitHub Actions from a version tag |
 | Mac | Electron program (`.dmg` and `.zip`, Apple Silicon and Intel; not signed by Apple) | built by GitHub Actions from a version tag |
-| Android | Capacitor project | you build it in Android Studio (no APK is published on GitHub) |
+| Android | Capacitor project | you build it in Android Studio (GitHub builds no APK; if you attach your own signed APK to a release, the download page shows it, see `FIRST-BUILD.md` step 10) |
 | Web | a download page (`site/index.html`) | published with GitHub Pages |
 
 **Download:** https://denka1922.github.io/study-desk/ has a tab for Windows, Mac and Android and always offers the newest version.

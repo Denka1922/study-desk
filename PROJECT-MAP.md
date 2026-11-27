@@ -81,4 +81,4 @@ Error kinds seen by the page: auth, quota, rate, network, timeout, cancelled, ba
 - Legacy page tests must keep passing: with no desktop bridge the Tutor works exactly as before (first visit opens the key setup, Gemini preselected).
 
 ## Facts about the owner's choices
-Unsigned Windows program; Mac ad-hoc signed; Android built by the owner in Android Studio and published to Google Play (no APK from GitHub); installers are handed over as files (GitHub Pages is not used because of cost); Local AI uses the built-in engine, not Ollama; reply in simple English, the owner is Turkish.
+Unsigned Windows program; Mac ad-hoc signed; Android built by the owner in Android Studio and published to Google Play (GitHub builds no APK; an APK the owner builds and attaches to a release as `Study-Desk-<version>-android.apk` is offered by `site/index.html`); installers are handed over as files (GitHub Pages is not used because of cost); Local AI uses the built-in engine, not Ollama; reply in simple English, the owner is Turkish.

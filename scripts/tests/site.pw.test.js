@@ -181,6 +181,45 @@ test('repository comes from the page address', () => withBrowser(async b => {
   assert.ok(![...custom.hosts].includes('api.github.com'));
 }));
 
+const APK = { name: 'Study-Desk-1.2.0-android.apk', size: 3381493, browser_download_url: DL + 'Study-Desk-1.2.0-android.apk' };
+const withApk = (extra = []) => release({ assets: [...release().assets, APK, ...extra] });
+
+test('Android APK: a download button appears only when the release has one, from this repository only', () => withBrowser(async b => {
+  const none = await open(b);
+  assert.strictEqual(await none.page.locator('#btn-apk').count(), 0);
+  assert.match(await none.page.locator('#android-card').innerText(), /Android: coming soon on Google Play/);
+  const yes = await open(b, { api: { status: 200, body: withApk() } });
+  assert.strictEqual(await href(yes.page, '#btn-apk'), DL + 'Study-Desk-1.2.0-android.apk');
+  assert.match(await yes.page.locator('#btn-apk').innerText(), /Download the Android app \(APK\)/);
+  const card = await yes.page.locator('#android-card').innerText();
+  assert.match(card, /Study-Desk-1\.2\.0-android\.apk · 3\.2 MB/);
+  assert.match(card, /Install unknown apps|install unknown apps/i);
+  assert.match(card, /does not update itself|doesn't update itself|not update by itself/i);
+  assert.ok(!/coming soon/i.test(card), 'the page does not say "coming soon" when the file is there');
+  assert.deepStrictEqual(yes.errs, []);
+  // a file from somewhere else, a wrong name, or a checksum file never becomes the button
+  for (const bad of [{ name: 'Study-Desk-1.2.0-android.apk', size: 1, browser_download_url: 'https://evil.example/alice/study-desk/releases/download/v1.2.0/Study-Desk-1.2.0-android.apk' },
+    { name: 'other.apk', size: 1, browser_download_url: DL + 'other.apk' }, { name: 'Study-Desk-1.2.0-android.apk.sha256', size: 1, browser_download_url: DL + 'x.sha256' }]) {
+    const x = await open(b, { api: { status: 200, body: release({ assets: [...release().assets, bad] }) } });
+    assert.strictEqual(await x.page.locator('#btn-apk').count(), 0, bad.name + ' ' + bad.browser_download_url);
+  }
+}));
+
+test('Android APK: Android visitors get it from the big button, and Google Play wins once an address is set', () => withBrowser(async b => {
+  const and = await open(b, { ua: ANDROID_UA, api: { status: 200, body: withApk() } });
+  assert.strictEqual(await href(and.page, '#hero-dl'), DL + 'Study-Desk-1.2.0-android.apk');
+  assert.strictEqual((await and.page.locator('#hero-dl').innerText()).trim(), 'Get the Android app');
+  const win = await open(b, { api: { status: 200, body: withApk() } });
+  assert.strictEqual(await href(win.page, '#hero-dl'), DL + 'Study-Desk-Setup-1.2.0.exe', 'the Windows button is untouched');
+  const good = 'https://play.google.com/store/apps/details?id=app.studydesk.planner';
+  const both = await open(b, { ua: ANDROID_UA, play: good, api: { status: 200, body: withApk() } });
+  assert.strictEqual(await href(both.page, '#hero-dl'), good);
+  assert.strictEqual(await href(both.page, '#android-link'), good);
+  assert.strictEqual(await href(both.page, '#btn-apk'), DL + 'Study-Desk-1.2.0-android.apk');
+  assert.match(await both.page.locator('#android-card').innerText(), /Get it on Google Play/);
+  assert.deepStrictEqual(both.errs, []);
+}));
+
 test('Android card: coming soon until a valid Play Store address is set', () => withBrowser(async b => {
   const soon = await open(b);
   assert.match(await soon.page.locator('#android-card').innerText(), /Android: coming soon on Google Play/);
