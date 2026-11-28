@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SrjQshh4je+RjZiQOsgcWi3D58g1I4k/rpcbyZiyazk='; style-src 'sha256-qOtCancgkSY2NwGyfsVb9GDMFlKWsgsz4jbNjMlfGSA='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SrjQshh4je+RjZiQOsgcWi3D58g1I4k/rpcbyZiyazk='; style-src 'sha256-Y/5L3fkvBQGbbPY1y5/ig1LIBmF6xmIHVwJ66eIqq2E='; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <title>Study Desk: a planner for students</title>
 <meta name="description" content="Study Desk is a free student planner for Windows, Mac and Android: exams, deadlines, to-dos, grades, an AI tutor, and sync between your phone and PC.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -139,6 +139,11 @@ a:focus-visible,.btn:focus-visible,.tab:focus-visible,summary:focus-visible{outl
 #file-list li,#mac-list li,#apk-list li{overflow-wrap:anywhere;font-family:var(--f-mono);font-size:.85rem;margin-bottom:4px}
 .note{background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
 .note strong{color:var(--warn)}
+
+/* code signing policy */
+.sign{padding-block:40px 8px}
+.sign h2{font-size:1.25rem;margin-bottom:8px}
+.sign p{max-width:44em;color:var(--muted)}
 
 /* feedback */
 .fb{padding-block:56px 24px}
@@ -433,6 +438,12 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     </div>
   </div>
 
+  <div class="wrap sign" id="signing">
+    <h2>Code signing policy</h2>
+    <p>The Windows programs are not signed yet. That is why Windows warns before it opens them. We have applied to the SignPath Foundation for free code signing. If it is approved, this is how it will work: Free code signing provided by SignPath.io, certificate by SignPath Foundation. Only files that this project's GitHub Actions workflow builds from the public source code are signed, and every release is approved by hand.</p>
+    <p>Team roles: Authors, reviewers and approvers: the project maintainer, who owns the repository linked as Source code below. The Privacy policy is linked in the footer: Study Desk collects nothing about you and only contacts the servers it lists when you use that feature.</p>
+  </div>
+
   <div class="wrap fb" id="feedback" hidden aria-labelledby="fb-h">
     <h2 id="fb-h">Tell us what you think</h2>
     <p class="sub">Both forms open on GitHub, so you need a free GitHub account. Nothing is sent from this page. What you write there is public, together with your GitHub name, so never write passwords, API keys or personal details.</p>
@@ -537,6 +548,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:8px 20px}
     <nav aria-label="Project links">
       <a href="#download" data-repo="" hidden>Source code</a>
       <a href="#download" data-repo="/issues" hidden>Report a problem</a>
+      <a href="#signing">Code signing policy</a>
       <a href="#download" data-repo="/blob/main/PRIVACY.md" hidden>Privacy</a>
       <a href="#download" data-repo="/blob/main/LICENSE" hidden>License</a>
     </nav>

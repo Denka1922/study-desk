@@ -120,6 +120,10 @@ Your voice is understood on your computer by the same open-source sherpa-onnx en
 | `TEST-CHECKLIST.md` | What to click through on each platform. |
 | `PROJECT-MAP.md` | A short map of the code for contributors. |
 
+## Code signing policy
+
+The Windows programs are not signed yet (Windows shows an "unknown publisher" warning). The project has applied to the SignPath Foundation for free code signing. If approved: free code signing provided by SignPath.io, certificate by SignPath Foundation; only files built by this repository's GitHub Actions workflow are signed, each release approved by hand by the maintainer. The same text is on the download page. Privacy: see `PRIVACY.md`.
+
 ## Sync in short
 
 On the PC: **Sync**, pick how the devices find each other, a QR code appears. On the phone: **Sync**, **Scan the code**. Planner data (events, exams and grades, to-dos, shortcuts) and the AI Tutor courses are merged; the newest change wins, deletions travel, the AI key and AI settings never leave a device. Wi-Fi mode needs both apps open on the same Wi-Fi (Windows asks once whether to allow the program on private networks: allow it). Some school and guest Wi-Fi networks stop devices from seeing each other; use the internet option there. Details, limits and the security design are in `SYNC.md`.

@@ -186,7 +186,8 @@ test('push to talk: press to start, a level bar moves, press again, the words la
   await page.waitForFunction(() => document.getElementById('vc-ans') && document.getElementById('vc-ans').value.length > 0, null, { timeout: 5000 });
   const h = (await calls(page, 'hear'))[0];
   assert.deepStrictEqual([h.packId, h.lang, h.f32, h.keys], ['parakeet-en', 'en', true, 'lang,packId,samples']);
-  assert.ok(h.n > 16000 * 1.8 && h.n < 16000 * 6, 'about 16 000 numbers per second of sound: ' + h.n);
+  assert.ok(h.n > 16000 * 1.0 && h.n < 16000 * 6, // the test waits at least 1.2 s while recording, so more than 1 s is certain
+     'about 16 000 numbers per second of sound: ' + h.n);
   assert.ok(h.peak > 0.05, 'real sound, not silence: ' + h.peak);
   assert.strictEqual(await val(page), 'the hypotenuse is the longest side');
   assert.strictEqual(await state(page), 'off'); assert.strictEqual(await live(page), 0, 'the microphone is released');

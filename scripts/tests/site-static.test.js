@@ -77,3 +77,19 @@ test('the page shows no personal details or secrets', () => {
   assert.ok(!/@(gmail|outlook|hotmail|yahoo)\./i.test(h));
   assert.ok(!/workers\.dev/.test(h), 'no relay address on the page');
 });
+
+test('the page has an honest "Code signing policy": not signed yet, applied to SignPath Foundation, roles, privacy link; and it is linked from the footer', () => {
+  const h = read('site/index.html');
+  const m = /<(?:div|section)[^>]*id="signing"[\s\S]*?<\/(?:div|section)>\s*(?=<div class="wrap|<\/main>)/.exec(h);
+  assert.ok(m, 'a section with id="signing"');
+  const t = m[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert.match(t, /Code signing policy/);
+  assert.match(t, /not signed yet/i);
+  assert.match(t, /applied to the SignPath Foundation/i);
+  assert.match(t, /Free code signing provided by SignPath\.io/);
+  assert.match(t, /certificate by SignPath Foundation/i);
+  assert.match(t, /Authors?, reviewers? and approvers?/i);
+  assert.match(t, /Privacy policy/);
+  assert.ok(!/(are|is) signed by SignPath/i.test(t) && !/two-factor/i.test(t), 'no claim that is not true yet');
+  assert.match(h, /<footer>[\s\S]*href="#signing"[\s\S]*<\/footer>/);
+});
