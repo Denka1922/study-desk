@@ -108,6 +108,7 @@ Your voice is understood on your computer by the same open-source sherpa-onnx en
 | `desktop/voice/` | The Voice tutor, PC side: the voice list, downloads, the worker that makes the sound, the listener (speech to text: `ears-*.js`), the cache and the VoiceStudio link. Main process only; the page only plays the sound it gets back. |
 | `desktop/ai/` | The Local and CLI AI. It runs in the main process only; the page never gets a file path, command or port. |
 | `mobile/` | The Android project (Capacitor). Open `mobile/android` in Android Studio. |
+| `PRIVACY.md` | What leaves your device and why (no accounts, no analytics). A test checks that it names every server the app can contact. |
 | `site/` | The download page, with a feedback section: bug reports and reviews open a filled-in form on GitHub (`.github/ISSUE_TEMPLATE/`); approved reviews are shown on the page (setup in `FIRST-BUILD.md` step 11). |
 | `scripts/` | Helper scripts and all tests. |
 | `.github/workflows/build.yml` | Tests every push, publishes the download page, and builds the Windows and Mac files and the Release from a version tag. |

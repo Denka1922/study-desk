@@ -390,10 +390,11 @@ test('the app pictures load in light and dark, and project links point at this r
   }
   const { page } = await open(b);
   const links = await page.locator('a[data-repo]').evaluateAll(a => a.map(x => [x.href, x.hidden]));
-  assert.deepStrictEqual(links.map(l => l[1]), [false, false, false, false]);
+  assert.deepStrictEqual(links.map(l => l[1]), [false, false, false, false, false]);
+  assert.ok(links.some(([h]) => h === 'https://github.com/alice/study-desk/blob/main/PRIVACY.md'), 'the footer links to the privacy policy');
   for (const [h] of links) assert.match(h, /^https:\/\/github\.com\/alice\/study-desk(\/|$)/, h);
   const root = await open(b, { url: 'https://alice.github.io/' });
-  assert.deepStrictEqual(await root.page.locator('a[data-repo]').evaluateAll(a => a.map(x => x.hidden)), [true, true, true, true]);
+  assert.deepStrictEqual(await root.page.locator('a[data-repo]').evaluateAll(a => a.map(x => x.hidden)), [true, true, true, true, true]);
 }));
 
 test('the page has one main heading, labelled sections and no sideways scrolling at 320 px', () => withBrowser(async b => {
